@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SUPERVISOR
+  AGENT
+}
+
+enum ConversationStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum MessageDirection {
+  IN
+  OUT
+}
+
+enum MessageState {
+  PENDING
+  SENT
+  RECEIVED
+  READ
+  ERROR
+  DELETED
+}
+
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  role      Role     @default(AGENT)
+
+  firstName String
+  lastName  String
+
+  active    Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  conversations Conversation[]
+}
+
+
+model Conversation {
+  id            Int                @id @default(autoincrement())
+  externalId    String             @unique
+  status        ConversationStatus @default(OPEN)
+  assignedToId  Int?
+  assignedTo    User?              @relation(fields: [assignedToId], references: [id])
+  lastMessageAt   DateTime?
+  lastMessageText String?   @db.Text
+  messages        Message[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@index([status])
+  @@index([assignedToId])
+}
+
+
+model Message {
+  id               Int              @id @default(autoincrement())
+  externalId       String           @unique  
+  direction        MessageDirection
+  state            MessageState
+  text             String?          @db.Text
+  occurredAt       DateTime        
+  stateAt          DateTime?        
+  conversationId   Int
+  conversation     Conversation     @relation(fields: [conversationId], references: [id])
+  createdAt        DateTime         @default(now())
+
+  @@index([conversationId, occurredAt])
+}
