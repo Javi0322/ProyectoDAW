@@ -78,4 +78,36 @@ async function listConversations(req, res) {
   });
 }
 
-module.exports = { listConversations };
+async function assignToMe(req, res) {
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const id = Number(req.params.id);
+
+  if (!id) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  // Agente: solo puede asignarse si está sin asignar
+  if (role === "AGENT") {
+    const updated = await prisma.conversation.updateMany({
+      where: { id, assignedToId: null },
+      data: { assignedToId: userId },
+    });
+
+    if (updated.count === 0) {
+      return res.status(409).json({ ok: false, error: "already assigned" });
+    }
+
+    return res.json({ ok: true });
+  }
+
+  // Admin/Supervisor: se asigna sin condición (simple)
+  await prisma.conversation.update({
+    where: { id },
+    data: { assignedToId: userId },
+  });
+
+  return res.json({ ok: true });
+}
+
+module.exports = { listConversations, assignToMe };
