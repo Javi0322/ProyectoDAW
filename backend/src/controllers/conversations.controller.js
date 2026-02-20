@@ -110,4 +110,39 @@ async function assignToMe(req, res) {
   return res.json({ ok: true });
 }
 
-module.exports = { listConversations, assignToMe };
+async function assign(req, res) {
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const conversationId = Number(req.params.id);
+  const targetUserId = Number(req.body.userId);
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+  if (!targetUserId) {
+    return res.status(400).json({ ok: false, error: "invalid userId" });
+  }
+
+  // Solo SUPERVISOR o ADMIN pueden asignar a otros
+  if (role !== "ADMIN" && role !== "SUPERVISOR") {
+    return res.status(403).json({ ok: false, error: "forbidden" });
+  }
+
+  // Validar que el usuario destino existe y está activo
+  const target = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: { id: true, active: true, role: true },
+  });
+
+  if (!target || !target.active) {
+    return res.status(404).json({ ok: false, error: "target user not found/active" });
+  }
+
+  await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { assignedToId: targetUserId },
+  });
+
+  return res.json({ ok: true });
+}
+
+module.exports = { listConversations, assignToMe, assign };
