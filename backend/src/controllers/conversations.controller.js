@@ -145,4 +145,40 @@ async function assign(req, res) {
   return res.json({ ok: true });
 }
 
-module.exports = { listConversations, assignToMe, assign };
+async function unassign(req, res) {
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const userId = Number(req.user.sub);
+  const conversationId = Number(req.params.id);
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  // AGENT: solo si es suya
+  if (role === "AGENT") {
+    const updated = await prisma.conversation.updateMany({
+      where: { id: conversationId, assignedToId: userId },
+      data: { assignedToId: null },
+    });
+
+    if (updated.count === 0) {
+      return res.status(403).json({ ok: false, error: "forbidden" });
+    }
+
+    return res.json({ ok: true });
+  }
+
+  // ADMIN / SUPERVISOR: desasignar cualquiera
+  if (role === "ADMIN" || role === "SUPERVISOR") {
+    await prisma.conversation.update({
+      where: { id: conversationId },
+      data: { assignedToId: null },
+    });
+
+    return res.json({ ok: true });
+  }
+
+  return res.status(403).json({ ok: false, error: "forbidden" });
+}
+
+module.exports = { listConversations, assignToMe, assign, unassign };
