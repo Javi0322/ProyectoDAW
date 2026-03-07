@@ -57,7 +57,7 @@ model Conversation {
   customerPhone   String?
   status        ConversationStatus @default(OPEN)
   assignedToId  Int?
-  assignedTo    User?              @relation(fields: [assignedToId], references: [id])
+  assignedTo    User?              @relation("AssignedConversarions", fields: [assignedToId], references: [id])
   lastMessageAt   DateTime?
   lastMessageText String?   @db.Text
   messages        Message[]
@@ -66,6 +66,7 @@ model Conversation {
 
   @@index([status])
   @@index([assignedToId])
+  @@index([lastMessageAt])
 }
 
 
