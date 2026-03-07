@@ -1,4 +1,5 @@
 const { prisma } = require("../prisma/client");
+const { sendWhatsAppMessage } = require("../services/message-provider.service");
 
 function parseIntOr(defaultValue, v) {
   const n = Number(v);
@@ -181,4 +182,175 @@ async function unassign(req, res) {
   return res.status(403).json({ ok: false, error: "forbidden" });
 }
 
-module.exports = { listConversations, assignToMe, assign, unassign };
+async function getConversationMessages(req, res) {
+  const conversationId = Number(req.params.id);
+
+  const limit = Math.min(Number(req.query.limit) || 50, 100);
+  const cursor = req.query.cursor ? Number(req.query.cursor) : null;
+
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      id: true,
+      assignedToId: true,
+    },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  // AGENT: solo si está asignada a él o si está sin asignar
+  // ADMIN/SUPERVISOR: pueden ver cualquiera
+  if (role === "AGENT") {
+    const canAccess =
+      conversation.assignedToId === null || conversation.assignedToId === userId;
+
+    if (!canAccess) {
+      return res.status(403).json({ ok: false, error: "forbidden" });
+    }
+  }
+
+  const messages = await prisma.message.findMany({
+    where: { conversationId },
+    take: limit + 1,
+    ...(cursor && {
+      skip: 1,
+      cursor: { id: cursor }
+    }),
+    orderBy: { occurredAt: "desc" },
+    select: {
+      id: true,
+      externalId: true,
+      direction: true,
+      state: true,
+      text: true,
+      occurredAt: true,
+      stateAt: true,
+      createdAt: true,
+    },
+  });
+
+  const hasMore = messages.length > limit;
+
+  if (hasMore) {
+    messages.pop();
+  }
+
+  messages.reverse();
+
+  const nextCursor = hasMore ? messages[0].id : null;
+
+  return res.json({ ok: true, hasMore, nextCursor, conversation, messages });
+}
+
+async function sendMessage(req, res) {
+  const conversationId = Number(req.params.id);
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const text = String(req.body.text || "").trim();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  if (!text) {
+    return res.status(400).json({ ok: false, error: "text is required" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      id: true,
+      assignedToId: true,
+      customerPhone: true,
+    },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  if (!conversation.customerPhone) {
+    return res.status(400).json({
+      ok: false,
+      error: "conversation has no customer phone",
+    });
+  }
+
+  // AGENT: solo puede enviar si la conversación está asignada a él
+  // ADMIN / SUPERVISOR: pueden enviar en cualquiera
+  if (role === "AGENT" && conversation.assignedToId !== userId) {
+    return res.status(403).json({ ok: false, error: "forbidden" });
+  }
+
+  try {
+    const providerResult = await sendWhatsAppMessage({
+      to: conversation.customerPhone,
+      text,
+    });
+
+    const providerMessage = providerResult.message;
+    const now = new Date();
+
+    const message = await prisma.message.create({
+      data: {
+        externalId: String(providerMessage.id),
+        direction: "OUT",
+        state: String(providerMessage.stateSlug || "PENDING").toUpperCase(),
+        text: providerMessage.text || text,
+        occurredAt: providerMessage.date ? new Date(providerMessage.date) : now,
+        stateAt: providerMessage.stateDate ? new Date(providerMessage.stateDate) : now,
+        conversationId: conversation.id,
+      },
+      select: {
+        id: true,
+        externalId: true,
+        direction: true,
+        state: true,
+        text: true,
+        occurredAt: true,
+        stateAt: true,
+        createdAt: true,
+        conversationId: true,
+      },
+    });
+
+    await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: {
+        lastMessageAt: providerMessage.date ? new Date(providerMessage.date) : now,
+        lastMessageText: providerMessage.text || text,
+      },
+    });
+
+    return res.status(201).json({
+      ok: true,
+      message,
+      providerMessage,
+    });
+  } catch (error) {
+    console.error("sendMessage error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "failed to send message",
+    });
+  }
+}
+
+
+module.exports = { 
+  listConversations, 
+  assignToMe, 
+  assign, 
+  unassign, 
+  getConversationMessages,
+  sendMessage
+                 };

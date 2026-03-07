@@ -54,6 +54,7 @@ model User {
 model Conversation {
   id            Int                @id @default(autoincrement())
   externalId    String             @unique
+  customerPhone   String?
   status        ConversationStatus @default(OPEN)
   assignedToId  Int?
   assignedTo    User?              @relation(fields: [assignedToId], references: [id])

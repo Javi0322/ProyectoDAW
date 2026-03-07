@@ -14,6 +14,8 @@ async function providerWebhook(req, res) {
     const body = req.body;
     const eventSlug = body?.event?.eventSlug;
 
+    console.log(body);
+
     if (!eventSlug) {
       return res.status(400).json({ ok: false, error: "missing eventSlug" });
     }
@@ -29,11 +31,16 @@ async function providerWebhook(req, res) {
     }
 
     // upsert de Conversation
+    const customerPhone = getCustomerPhone(body, eventSlug);
+
     const conversation = await prisma.conversation.upsert({
       where: { externalId: String(externalConversationId) },
-      update: {},
+      update: {
+        ...(customerPhone && { customerPhone }),
+      },
       create: {
         externalId: String(externalConversationId),
+        customerPhone,
       },
     });
 
@@ -105,6 +112,18 @@ async function providerWebhook(req, res) {
     console.error("providerWebhook error:", err);
     return res.status(500).json({ ok: false, error: "internal error" });
   }
+}
+
+function getCustomerPhone(body, eventSlug) {
+  if (eventSlug === "message.incomming") {
+    return body?.message?.channel?.to ?? null;
+  }
+
+  if (eventSlug === "message.outgoing") {
+    return body?.message?.channel?.to ?? null;
+  }
+
+  return null;
 }
 
 module.exports = { providerWebhook };
