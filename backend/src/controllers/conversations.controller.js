@@ -345,6 +345,113 @@ async function sendMessage(req, res) {
   }
 }
 
+async function getConversationById(req, res) {
+  const conversationId = Number(req.params.id);
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      id: true,
+      externalId: true,
+      customerPhone: true,
+      status: true,
+      assignedToId: true,
+      lastMessageAt: true,
+      lastMessageText: true,
+      createdAt: true,
+      updatedAt: true,
+      assignedTo: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          active: true,
+        },
+      },
+    },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  // AGENT: solo si está asignada a él o si está sin asignar
+  // ADMIN/SUPERVISOR: pueden ver cualquiera
+  if (role === "AGENT") {
+    const canAccess =
+      conversation.assignedToId === null || conversation.assignedToId === userId;
+
+    if (!canAccess) {
+      return res.status(403).json({ ok: false, error: "forbidden" });
+    }
+  }
+
+  return res.json({
+    ok: true,
+    conversation,
+  });
+}
+
+async function updateConversationStatus(req, res) {
+  const conversationId = Number(req.params.id);
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const status = String(req.body.status || "").trim().toUpperCase();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  if (!["OPEN", "PENDING", "CLOSED"].includes(status)) {
+    return res.status(400).json({ ok: false, error: "invalid status" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      id: true,
+      assignedToId: true,
+    },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  // AGENT: solo si la conversación está asignada a él
+  // ADMIN / SUPERVISOR: cualquiera
+  if (role === "AGENT" && conversation.assignedToId !== userId) {
+    return res.status(403).json({ ok: false, error: "forbidden" });
+  }
+
+  const updatedConversation = await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { status },
+    select: {
+      id: true,
+      externalId: true,
+      customerPhone: true,
+      status: true,
+      assignedToId: true,
+      lastMessageAt: true,
+      lastMessageText: true,
+      updatedAt: true,
+    },
+  });
+
+  return res.json({
+    ok: true,
+    conversation: updatedConversation,
+  });
+}
 
 module.exports = { 
   listConversations, 
@@ -352,5 +459,7 @@ module.exports = {
   assign, 
   unassign, 
   getConversationMessages,
-  sendMessage
+  sendMessage,
+  getConversationById,
+  updateConversationStatus
                  };

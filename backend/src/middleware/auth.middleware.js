@@ -10,7 +10,7 @@ function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = payload; // aquí debe venir sub y role
+    req.user = payload;
     next();
   } catch (err) {
     return res.status(401).json({ ok: false, error: "invalid token" });
