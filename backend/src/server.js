@@ -41,7 +41,7 @@ setSocketServer(io);
 
 io.use((socket, next) => {
   try {
-    const token = socket.handshake.auth?.token;
+    const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
     if (!token) {
       return next(new Error("unauthorized"));
