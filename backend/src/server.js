@@ -6,8 +6,10 @@ const authRoutes = require("./routes/auth.routes");
 const meRoutes = require("./routes/me.routes");
 const webhooksRoutes = require("./routes/webhooks.routes");
 const conversationsRoutes = require("./routes/conversations.routes");
-
-
+const http = require("http");
+const { Server } = require("socket.io");
+const { setSocketServer } = require("./socket");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
@@ -18,7 +20,6 @@ app.use("/webhooks", webhooksRoutes);
 app.use("/conversations", conversationsRoutes);
 
 
-
 // Ruta de prueba
 app.get("/health", (req, res) => {
   res.json({ ok: true, message: "API running" });
@@ -27,6 +28,53 @@ app.get("/health", (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+setSocketServer(io);
+
+
+io.use((socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+
+    if (!token) {
+      return next(new Error("unauthorized"));
+    }
+
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+
+    socket.user = {
+      id: payload.sub,
+      role: payload.role,
+    };
+
+    next();
+  } catch (err) {
+    next(new Error("unauthorized"));
+  }
+});
+
+
+io.on("connection", (socket) => {
+  const userId = socket.user.id;
+
+  console.log("socket connected", userId);
+
+  // room del usuario
+  socket.join(`user:${userId}`);
+
+  socket.on("disconnect", () => {
+    console.log("socket disconnected", userId);
+  });
+});
+
+
+server.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
