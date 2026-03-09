@@ -299,7 +299,6 @@ async function sendMessage(req, res) {
 
     const providerMessage = providerResult.message;
     const externalId = providerMessage.id;
-    console.log(providerMessage.id);
     const now = new Date();
 
     const message = await prisma.message.upsert({
