@@ -1,5 +1,6 @@
 const { prisma } = require("../prisma/client");
 const { sendWhatsAppMessage } = require("../services/message-provider.service");
+const { emitToConversationAudience } = require("../services/realtime.service");
 
 function parseIntOr(defaultValue, v) {
   const n = Number(v);
@@ -80,7 +81,8 @@ async function listConversations(req, res) {
 }
 
 async function assignToMe(req, res) {
-  const userId = Number(req.user.sub);
+  const user = req.user;
+  const userId = Number(user.sub);
   const role = String(req.user.role || "").trim().toUpperCase();
   const id = Number(req.params.id);
 
@@ -90,23 +92,29 @@ async function assignToMe(req, res) {
 
   // Agente: solo puede asignarse si está sin asignar
   if (role === "AGENT") {
-    const updated = await prisma.conversation.updateMany({
-      where: { id, assignedToId: null },
-      data: { assignedToId: userId },
-    });
+    
+    try {
+      const conversation = await prisma.conversation.update({
+        where: { id, assignedToId: null },
+        data: { assignedToId: userId },
+      });
 
-    if (updated.count === 0) {
+      emitToConversationAudience("conversation:assign", {conversation} );
+
+    } catch (error) {
       return res.status(409).json({ ok: false, error: "already assigned" });
     }
-
+    
     return res.json({ ok: true });
   }
 
   // Admin/Supervisor: se asigna sin condición (simple)
-  await prisma.conversation.update({
+  const conversation = await prisma.conversation.update({
     where: { id },
     data: { assignedToId: userId },
   });
+
+  emitToConversationAudience("conversation:assign", {conversation} );
 
   return res.json({ ok: true });
 }

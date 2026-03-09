@@ -63,14 +63,16 @@ io.use((socket, next) => {
 
 io.on("connection", (socket) => {
   const userId = socket.user.id;
+  const userRole = socket.user.role;
 
-  console.log("socket connected", userId);
+  console.log(`socket connected, UserId ${userId} - Role ${userRole}`);
 
   // room del usuario
   socket.join(`user:${userId}`);
+  socket.join(`role:${userRole}`);
 
   socket.on("disconnect", () => {
-    console.log("socket disconnected", userId);
+    console.log(`socket disconnected, UserId ${userId} - Role ${userRole}`);
   });
 });
 

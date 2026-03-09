@@ -1,5 +1,5 @@
 const { prisma } = require("../prisma/client");
-const { emitMessageNew, emitMessageUpdate } = require("../services/realtime.service");
+const { emitToConversationAudience } = require("../services/realtime.service");
 
 // saca conversationId del payload (varía según evento)
 function getExternalConversationId(body) {
@@ -90,7 +90,7 @@ async function providerWebhook(req, res) {
               text,
               occurredAt,
               stateAt,
-              conversationId: conversation.id,
+              conversationId : conversation.id,
             },
           });
 
@@ -102,8 +102,8 @@ async function providerWebhook(req, res) {
             },
           });
 
-        emitMessageNew({
-            conversationId: conversation.id,
+        emitToConversationAudience("message:new",{
+            conversation,
             message: {
               id: message.id,
               externalId: message.externalId,
@@ -134,13 +134,9 @@ async function providerWebhook(req, res) {
             where: { externalId },
             data: { state, stateAt },
           });
+      
 
-          
-
-          emitMessageUpdate({
-            conversationId : message.conversationId,
-            message
-          });
+          emitToConversationAudience("message:update",{conversation, message});
         }
       } catch (err) {
         console.error("async providerWebhook error:", err);
