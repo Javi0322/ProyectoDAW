@@ -15,12 +15,12 @@ function emitMessageNew({ conversationId, message }) {
 function emitMessageUpdate({ conversationId, message }) {
   const io = getSocketServer();
 
-  io.emit("message:state_update", {
+  io.emit("message:update", {
     conversationId,
     message,
   });
 
-  console.log("Evento message:state_update:"+ message.state + " emitido al websocket");
+  console.log("Evento message:update:"+ message.state + " emitido al websocket");
 }
 
 module.exports = {
