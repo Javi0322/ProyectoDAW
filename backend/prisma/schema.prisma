@@ -57,7 +57,7 @@ model Conversation {
   customerPhone   String?
   status        ConversationStatus @default(OPEN)
   assignedToId  Int?
-  assignedTo    User?              @relation("AssignedConversations", fields: [assignedToId], references: [id])
+  assignedTo    User?              @relation(fields: [assignedToId], references: [id])
   lastMessageAt   DateTime?
   lastMessageText String?   @db.Text
   messages        Message[]

@@ -1,4 +1,5 @@
 const { prisma } = require("../prisma/client");
+const { emitMessageNew, emitMessageUpdate } = require("../services/realtime.service");
 
 // saca conversationId del payload (varía según evento)
 function getExternalConversationId(body) {
@@ -9,12 +10,22 @@ function getExternalConversationId(body) {
   );
 }
 
+function getCustomerPhone(body, eventSlug) {
+  if (eventSlug === "message.incomming") {
+    return body?.message?.channel?.to ?? null;
+  }
+
+  if (eventSlug === "message.outgoing") {
+    return body?.message?.channel?.to ?? null;
+  }
+
+  return null;
+}
+
 async function providerWebhook(req, res) {
   try {
     const body = req.body;
     const eventSlug = body?.event?.eventSlug;
-
-    console.log(body);
 
     if (!eventSlug) {
       return res.status(400).json({ ok: false, error: "missing eventSlug" });
@@ -30,100 +41,115 @@ async function providerWebhook(req, res) {
       return res.status(400).json({ ok: false, error: "missing conversation id" });
     }
 
-    // upsert de Conversation
-    const customerPhone = getCustomerPhone(body, eventSlug);
+    // Respondemos YA al proveedor
+    res.json({ ok: true });
 
-    const conversation = await prisma.conversation.upsert({
-      where: { externalId: String(externalConversationId) },
-      update: {
-        ...(customerPhone && { customerPhone }),
-      },
-      create: {
-        externalId: String(externalConversationId),
-        customerPhone,
-      },
+    // Y procesamos después
+    setImmediate(async () => {
+      try {
+        // upsert de Conversation
+        const customerPhone = getCustomerPhone(body, eventSlug);
+
+        const conversation = await prisma.conversation.upsert({
+          where: { externalId: String(externalConversationId) },
+          update: {
+            ...(customerPhone && { customerPhone }),
+          },
+          create: {
+            externalId: String(externalConversationId),
+            customerPhone,
+          },
+        });
+
+        // 1) INCOMING / OUTGOING → creamos mensaje
+        if (eventSlug === "message.incomming" || eventSlug === "message.outgoing") {
+          const msg = body.message;
+
+          const externalId = String(msg.id);
+          const text = msg.text ?? null;
+          const occurredAt = new Date(msg.date);
+          const stateAt = msg.stateDate ? new Date(msg.stateDate) : null;
+
+          const direction = eventSlug === "message.incomming" ? "IN" : "OUT";
+
+          const rawState = String(msg.stateSlug || "ERROR").toUpperCase();
+          const allowed = ["PENDING", "SENT", "RECEIVED", "READ", "ERROR", "DELETED"];
+          const state = allowed.includes(rawState) ? rawState : "ERROR";
+
+          const message = await prisma.message.upsert({
+            where: { externalId },
+            update: {
+              state,
+              stateAt,
+              text,
+            },
+            create: {
+              externalId,
+              direction,
+              state,
+              text,
+              occurredAt,
+              stateAt,
+              conversationId: conversation.id,
+            },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: {
+              lastMessageAt: occurredAt,
+              lastMessageText: text,
+            },
+          });
+
+        emitMessageNew({
+            conversationId: conversation.id,
+            message: {
+              id: message.id,
+              externalId: message.externalId,
+              text: message.text,
+              direction: message.direction,
+              state: message.state,
+              occurredAt: message.occurredAt,
+              stateAt: message.stateAt,
+              conversationId: message.conversationId,
+              createdAt: message.createdAt,
+            },
+          });
+        }
+        
+
+        // 2) STATE_UPDATED → actualizamos estado del mensaje ya existente
+        if (eventSlug === "message.state_updated") {
+          const msg = body.message;
+
+          const externalId = String(msg.id);
+          const rawState = String(msg.stateSlug || "ERROR").toUpperCase();
+          const allowed = ["PENDING", "SENT", "RECEIVED", "READ", "ERROR", "DELETED"];
+          const state = allowed.includes(rawState) ? rawState : "ERROR";
+
+          const stateAt = msg.stateDate ? new Date(msg.stateDate) : new Date();
+
+          const message = await prisma.message.update({
+            where: { externalId },
+            data: { state, stateAt },
+          });
+
+          
+
+          emitMessageUpdate({
+            conversationId : message.conversationId,
+            message
+          });
+        }
+      } catch (err) {
+        console.error("async providerWebhook error:", err);
+      }
     });
-
-    // 1) INCOMING / OUTGOING → creamos mensaje
-    if (eventSlug === "message.incomming" || eventSlug === "message.outgoing") {
-      const msg = body.message;
-
-      const externalId = String(msg.id);
-      const text = msg.text ?? null;
-      const occurredAt = new Date(msg.date);
-      const stateAt = msg.stateDate ? new Date(msg.stateDate) : null;
-
-      const direction = eventSlug === "message.incomming" ? "IN" : "OUT";
-
-      // stateSlug viene como texto: PENDING/SENT/RECEIVED/READ/ERROR/DELETED
-      // lo guardamos tal cual (si viene algo raro, lo convertimos a ERROR)
-      const rawState = String(msg.stateSlug || "ERROR").toUpperCase();
-      const allowed = ["PENDING", "SENT", "RECEIVED", "READ", "ERROR", "DELETED"];
-      const state = allowed.includes(rawState) ? rawState : "ERROR";
-
-      // upsert mensaje por externalId para evitar duplicados
-      await prisma.message.upsert({
-        where: { externalId },
-        update: {
-          state,
-          stateAt,
-          text,
-        },
-        create: {
-          externalId,
-          direction,
-          state,
-          text,
-          occurredAt,
-          stateAt,
-          conversationId: conversation.id,
-        },
-      });
-
-      // actualizar resumen de conversación
-      await prisma.conversation.update({
-        where: { id: conversation.id },
-        data: {
-          lastMessageAt: occurredAt,
-          lastMessageText: text,
-        },
-      });
-    }
-
-    // 2) STATE_UPDATED → actualizamos estado del mensaje ya existente
-    if (eventSlug === "message.state_updated") {
-      const msg = body.message;
-
-      const externalId = String(msg.id);
-      const rawState = String(msg.stateSlug || "ERROR").toUpperCase();
-      const allowed = ["PENDING", "SENT", "RECEIVED", "READ", "ERROR", "DELETED"];
-      const state = allowed.includes(rawState) ? rawState : "ERROR";
-
-      const stateAt = msg.stateDate ? new Date(msg.stateDate) : new Date();
-
-      await prisma.message.updateMany({
-        where: { externalId },
-        data: { state, stateAt },
-      });
-    }
-
-    return res.json({ ok: true });
   } catch (err) {
     console.error("providerWebhook error:", err);
     return res.status(500).json({ ok: false, error: "internal error" });
   }
-}
-
-function getCustomerPhone(body, eventSlug) {
-  if (eventSlug === "message.incomming") {
-    return body?.message?.channel?.to ?? null;
-  }
-
-  if (eventSlug === "message.outgoing") {
-    return body?.message?.channel?.to ?? null;
-  }
-
-  return null;
 }
 
 module.exports = { providerWebhook };

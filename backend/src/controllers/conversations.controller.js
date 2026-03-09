@@ -298,30 +298,27 @@ async function sendMessage(req, res) {
     });
 
     const providerMessage = providerResult.message;
+    const externalId = providerMessage.id;
+    console.log(providerMessage.id);
     const now = new Date();
 
-    const message = await prisma.message.create({
-      data: {
-        externalId: String(providerMessage.id),
-        direction: "OUT",
-        state: String(providerMessage.stateSlug || "PENDING").toUpperCase(),
-        text: providerMessage.text || text,
-        occurredAt: providerMessage.date ? new Date(providerMessage.date) : now,
-        stateAt: providerMessage.stateDate ? new Date(providerMessage.stateDate) : now,
-        conversationId: conversation.id,
-      },
-      select: {
-        id: true,
-        externalId: true,
-        direction: true,
-        state: true,
-        text: true,
-        occurredAt: true,
-        stateAt: true,
-        createdAt: true,
-        conversationId: true,
-      },
-    });
+    const message = await prisma.message.upsert({
+            where: { externalId },
+            update: {
+              state : providerMessage.stateSlug,
+              stateAt : now,
+              text : providerMessage.text
+            },
+            create: {
+              externalId : String(providerMessage.id),
+              direction : 'OUT',
+              state : providerMessage.stateSlug,
+              text : providerMessage.text,
+              occurredAt : now,
+              stateAt : providerMessage.stateDate,
+              conversationId: conversation.id,
+            },
+          });
 
     await prisma.conversation.update({
       where: { id: conversation.id },
