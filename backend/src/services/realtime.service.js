@@ -3,7 +3,6 @@ const { getSocketServer } = require("../socket");
 function emitToConversationAudience(eventName, payload, notifyAll = false) {
   const io = getSocketServer();
   const { conversation } = payload;
-  console.log(conversation);
 
   if (notifyAll) {
     io.to("role:AGENT").emit(eventName, payload);
