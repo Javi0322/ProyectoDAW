@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth.routes");
 const meRoutes = require("./routes/me.routes");
 const webhooksRoutes = require("./routes/webhooks.routes");
 const conversationsRoutes = require("./routes/conversations.routes");
+const usersRoutes = require("./routes/users.routes");
 const http = require("http");
 const { Server } = require("socket.io");
 const { setSocketServer } = require("./socket");
@@ -18,6 +19,7 @@ app.use("/auth", authRoutes);
 app.use("/me", meRoutes);
 app.use("/webhooks", webhooksRoutes);
 app.use("/conversations", conversationsRoutes);
+app.use("/users", usersRoutes);
 
 
 // Ruta de prueba

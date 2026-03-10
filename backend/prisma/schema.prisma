@@ -49,6 +49,7 @@ model User {
   updatedAt DateTime @updatedAt
   conversations Conversation[]
   conversationStates ConversationUserState[]
+  sentMessages Message[]
 }
 
 
@@ -74,14 +75,16 @@ model Conversation {
 
 model Message {
   id               Int              @id @default(autoincrement())
-  externalId       String           @unique  
+  externalId       String           @unique
   direction        MessageDirection
   state            MessageState
   text             String?          @db.Text
-  occurredAt       DateTime        
-  stateAt          DateTime?        
+  occurredAt       DateTime
+  stateAt          DateTime?
   conversationId   Int
   conversation     Conversation     @relation(fields: [conversationId], references: [id])
+  sentById         Int?
+  sentBy           User?            @relation(fields: [sentById], references: [id])
   createdAt        DateTime         @default(now())
 
   @@index([conversationId, occurredAt])
