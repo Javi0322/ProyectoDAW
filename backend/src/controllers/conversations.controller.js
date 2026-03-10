@@ -61,22 +61,43 @@ async function listConversations(req, res) {
         externalId: true,
         status: true,
         assignedToId: true,
+        customerPhone: true,
         lastMessageAt: true,
         lastMessageText: true,
         updatedAt: true,
         assignedTo: {
           select: { id: true, firstName: true, lastName: true, email: true, role: true },
         },
+        userStates: {
+          where: { userId },
+          select: {
+            lastReadAt: true,
+          },
+        },
       },
     }),
   ]);
+
+  const normalizedItems = items.map((conversation) => {
+    const userState = conversation.userStates[0] || null;
+
+    return {
+      ...conversation,
+      isRead: !!userState?.lastReadAt && (
+        !conversation.lastMessageAt ||
+        new Date(userState.lastReadAt) >= new Date(conversation.lastMessageAt)
+      ),
+      lastReadAt: userState?.lastReadAt || null,
+      userStates: undefined
+    };
+  });
 
   return res.json({
     ok: true,
     page,
     pageSize,
     total,
-    items,
+    items : normalizedItems
   });
 }
 
