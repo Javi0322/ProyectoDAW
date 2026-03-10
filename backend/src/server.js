@@ -67,12 +67,24 @@ io.on("connection", (socket) => {
 
   console.log(`socket connected, UserId ${userId} - Role ${userRole}`);
 
-  // room del usuario
   socket.join(`user:${userId}`);
   socket.join(`role:${userRole}`);
 
+  socket.on("conversation:join", (conversationId) => {
+    const room = `conversation:${conversationId}`;
+    socket.join(room);
+    console.log(`socket ${socket.user.id} joined ${room}`);
+  });
+
+  socket.on("conversation:leave", (conversationId) => {
+    const room = `conversation:${conversationId}`;
+    socket.leave(room);
+    console.log(`socket ${socket.user.id} left ${room}`);
+  });
+
   socket.on("disconnect", () => {
-    console.log(`socket disconnected, UserId ${userId} - Role ${userRole}`);
+      console.log(`socket disconnected, UserId ${userId} - Role ${userRole}`);
+
   });
 });
 
