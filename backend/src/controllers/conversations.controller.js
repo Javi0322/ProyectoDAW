@@ -378,7 +378,6 @@ async function sendMessage(req, res) {
     return res.status(201).json({
       ok: true,
       message,
-      providerMessage,
     });
   } catch (error) {
     console.error("sendMessage error:", error);
