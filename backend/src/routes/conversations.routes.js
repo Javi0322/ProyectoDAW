@@ -8,7 +8,8 @@ const {
     getConversationMessages,
     sendMessage,
     getConversationById,
-    updateConversationStatus
+    updateConversationStatus,
+    markConversationAsRead
   } = require("../controllers/conversations.controller");
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.post("/:id/unassign", requireAuth, unassign);
 router.get("/:id/messages", requireAuth, getConversationMessages);
 router.post("/:id/messages", requireAuth, sendMessage);
 router.patch("/:id/status", requireAuth, updateConversationStatus);
+router.post("/:id/read", requireAuth, markConversationAsRead);
 
 module.exports = router;

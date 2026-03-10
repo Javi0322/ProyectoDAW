@@ -102,6 +102,14 @@ async function providerWebhook(req, res) {
             },
           });
 
+          // marcar conversación como no leída para todos
+
+          await prisma.conversationUserState.deleteMany({
+            where: {
+              conversationId: conversation.id,
+            },
+          });
+
         emitToConversationAudience("message:new",{
             conversation,
             message: {

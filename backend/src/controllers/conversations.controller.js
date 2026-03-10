@@ -205,7 +205,7 @@ async function unassign(req, res) {
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id },
+      where: { id : conversationId },
     });
 
     emitToConversationAudience("conversation:assign", { conversation }, true);
@@ -454,7 +454,7 @@ async function updateConversationStatus(req, res) {
     return res.status(400).json({ ok: false, error: "invalid status" });
   }
 
-  const conversation = await prisma.conversation.findUnique({
+  let conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     select: {
       id: true,
@@ -495,6 +495,70 @@ async function updateConversationStatus(req, res) {
   });
 }
 
+async function markConversationAsRead(req, res) {
+  const conversationId = Number(req.params.id);
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: {
+      id: true,
+      assignedToId: true,
+      lastMessageAt: true,
+    },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  // AGENT: solo si está asignada a él o si está sin asignar
+  // ADMIN/SUPERVISOR: pueden marcar cualquiera
+  if (role === "AGENT") {
+    const canAccess =
+      conversation.assignedToId === null || conversation.assignedToId === userId;
+
+    if (!canAccess) {
+      return res.status(403).json({ ok: false, error: "forbidden" });
+    }
+  }
+
+  const readAt = conversation.lastMessageAt || new Date();
+
+  const state = await prisma.conversationUserState.upsert({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId,
+      },
+    },
+    update: {
+      lastReadAt: readAt,
+    },
+    create: {
+      conversationId,
+      userId,
+      lastReadAt: readAt,
+    },
+    select: {
+      id: true,
+      conversationId: true,
+      userId: true,
+      lastReadAt: true,
+    },
+  });
+
+  return res.json({
+    ok: true,
+    state,
+  });
+}
+
 module.exports = { 
   listConversations, 
   assignToMe, 
@@ -503,5 +567,6 @@ module.exports = {
   getConversationMessages,
   sendMessage,
   getConversationById,
-  updateConversationStatus
+  updateConversationStatus,
+  markConversationAsRead
                  };

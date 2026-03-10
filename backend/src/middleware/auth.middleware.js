@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const { prisma } = require("../prisma/client");
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const header = req.headers.authorization || "";
   const [type, token] = header.split(" ");
 
@@ -10,7 +11,17 @@ function requireAuth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-    req.user = payload;
+
+    const user = await prisma.user.findUnique({
+      where: { id: Number(payload.sub) },
+      select: { id: true, role: true, active: true },
+    });
+
+    if (!user || !user.active) {
+      return res.status(401).json({ ok: false, error: "invalid token" });
+    }
+
+    req.user = { sub: user.id, role: user.role };
     next();
   } catch (err) {
     return res.status(401).json({ ok: false, error: "invalid token" });
