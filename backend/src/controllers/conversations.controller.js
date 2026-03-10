@@ -92,19 +92,26 @@ async function assignToMe(req, res) {
 
   // Agente: solo puede asignarse si está sin asignar
   if (role === "AGENT") {
-    
-    try {
-      const conversation = await prisma.conversation.update({
-        where: { id, assignedToId: null },
-        data: { assignedToId: userId },
-      });
+    const result = await prisma.conversation.updateMany({
+      where: {
+        id,
+        assignedToId: null,
+      },
+      data: {
+        assignedToId: userId,
+      },
+    });
 
-      emitToConversationAudience("conversation:assign", {conversation}, true);
-
-    } catch (error) {
+    if (result.count === 0) {
       return res.status(409).json({ ok: false, error: "already assigned" });
     }
-    
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id },
+    });
+
+    emitToConversationAudience("conversation:assign", { conversation }, true);
+
     return res.json({ ok: true });
   }
 
@@ -146,10 +153,12 @@ async function assign(req, res) {
     return res.status(404).json({ ok: false, error: "target user not found/active" });
   }
 
-  await prisma.conversation.update({
+  const conversation = await prisma.conversation.update({
     where: { id: conversationId },
     data: { assignedToId: targetUserId },
   });
+
+  emitToConversationAudience("conversation:assign", {conversation}, true);
 
   return res.json({ ok: true });
 }
@@ -173,6 +182,12 @@ async function unassign(req, res) {
     if (updated.count === 0) {
       return res.status(403).json({ ok: false, error: "forbidden" });
     }
+
+    const conversation = await prisma.conversation.findUnique({
+      where: { id },
+    });
+
+    emitToConversationAudience("conversation:assign", { conversation }, true);
 
     return res.json({ ok: true });
   }
@@ -436,7 +451,7 @@ async function updateConversationStatus(req, res) {
     return res.status(403).json({ ok: false, error: "forbidden" });
   }
 
-  const updatedConversation = await prisma.conversation.update({
+  conversation = await prisma.conversation.update({
     where: { id: conversationId },
     data: { status },
     select: {
@@ -451,9 +466,11 @@ async function updateConversationStatus(req, res) {
     },
   });
 
+  emitToConversationAudience("conversation:statusUpdate", { conversation }, true);
+  
   return res.json({
     ok: true,
-    conversation: updatedConversation,
+    conversation: conversation,
   });
 }
 
