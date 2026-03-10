@@ -99,7 +99,7 @@ async function assignToMe(req, res) {
         data: { assignedToId: userId },
       });
 
-      emitToConversationAudience("conversation:assign", {conversation} );
+      emitToConversationAudience("conversation:assign", {conversation}, true);
 
     } catch (error) {
       return res.status(409).json({ ok: false, error: "already assigned" });
@@ -114,7 +114,7 @@ async function assignToMe(req, res) {
     data: { assignedToId: userId },
   });
 
-  emitToConversationAudience("conversation:assign", {conversation} );
+  emitToConversationAudience("conversation:assign", {conversation}, true );
 
   return res.json({ ok: true });
 }
