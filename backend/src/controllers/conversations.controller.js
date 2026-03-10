@@ -219,10 +219,12 @@ async function unassign(req, res) {
 
   // ADMIN / SUPERVISOR: desasignar cualquiera
   if (role === "ADMIN" || role === "SUPERVISOR") {
-    await prisma.conversation.update({
+    const conversation = await prisma.conversation.update({
       where: { id: conversationId },
       data: { assignedToId: null },
     });
+
+    emitToConversationAudience("conversation:assign", { conversation }, true);
 
     return res.json({ ok: true });
   }
