@@ -15,7 +15,11 @@ async function listConversations(req, res) {
   const scope = String(req.query.scope || "mine");
 
   // status: OPEN | PENDING | CLOSED (si no viene, no filtra)
-  const status = req.query.status ? String(req.query.status) : null;
+  const status = req.query.status ? String(req.query.status).toUpperCase() : null;
+
+  if (status && !["OPEN", "PENDING", "CLOSED"].includes(status)) {
+    return res.status(400).json({ ok: false, error: "invalid status" });
+  }
 
   // paginación básica
   const page = parseIntOr(1, req.query.page);
