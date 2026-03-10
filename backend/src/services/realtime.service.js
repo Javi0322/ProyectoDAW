@@ -4,6 +4,10 @@ function emitToConversationAudience(eventName, payload, notifyAll = false) {
   const io = getSocketServer();
   const { conversation } = payload;
 
+  if (["message:new", "message:update"].includes(eventName)){
+    io.to(`conversation:${conversation.id}`).emit(eventName, payload);
+  }
+
   if (notifyAll) {
     io.to("role:AGENT").emit(eventName, payload);
     io.to("role:SUPERVISOR").emit(eventName, payload);
@@ -19,8 +23,6 @@ function emitToConversationAudience(eventName, payload, notifyAll = false) {
     console.log(`Evento ${eventName} emitido al websocket a todos`)
     return;
   }
-
-  
 
   io.to(`user:${conversation.assignedToId}`).emit(eventName, payload);
   io.to("role:SUPERVISOR").emit(eventName, payload);
