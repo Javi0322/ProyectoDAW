@@ -1,0 +1,459 @@
+{
+  "info": {
+    "_postman_id": "f04ba092-cf6d-474e-944d-04881d23a2dd",
+    "name": "PowerChat",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Conversation",
+      "item": [
+        {
+          "name": "Messages",
+          "item": [
+            {
+              "name": "Messages",
+              "id": "f6c1ddd4-336d-4cc7-b5a9-c66f89a243a9",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"text\" : \"Hola, prueba 23\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "conversations",
+                    "{{conversationId}}",
+                    "messages"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Messages",
+              "id": "114a6817-81dc-4b26-a28d-48bca0d7c5e4",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{accessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/conversations/{{conversationId}}/messages",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "conversations",
+                    "{{conversationId}}",
+                    "messages"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "id": "199c3aae-0e51-4463-8bd9-e47a80b1462e"
+        },
+        {
+          "name": "Conversations",
+          "id": "c99f832d-c44b-4c43-8baf-a941ad459eb8",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations?scope={{scope}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations"
+              ],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "{{scope}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversations:id",
+          "id": "c218bc6f-24d8-4189-bdc0-b23c7ba2fc7f",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversation:Assing-to-me",
+          "id": "8f4a039c-bf3f-48de-b23a-637a6e71e05c",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/assign-to-me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "assign-to-me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversation:Assing",
+          "id": "371f5144-e51d-4fed-afc8-2c49ce4d3070",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\" : 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "assign"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversation:Unassing",
+          "id": "8295bedc-1ab6-47fc-bb22-46b9988a1bc0",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\" : 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/unassign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "unassign"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ConversationStatus",
+          "id": "810742e7-9a6b-43e2-9555-1802d0dcbebe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"status\" : \"CLOSED\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "status"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversation:Read",
+          "id": "64244bb0-7c35-4dde-ac57-a5b458dedd68",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/read",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "read"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "id": "b79626db-0f5f-49ad-b948-25e86201a8b7"
+    },
+    {
+      "name": "Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();\r",
+              "\r",
+              "if (json.ok && json.accessToken) {\r",
+              "  pm.environment.set(\"accessToken\", json.accessToken);\r",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {},
+            "id": "6d166700-200a-4135-9b25-81f1917f6365"
+          }
+        }
+      ],
+      "id": "dea01145-6aaf-47b8-a382-55bb4202dc33",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"javier.garcia@motorflash.com\",\r\n  \"password\": \"javier1234\"\r\n}\r\n",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Me",
+      "id": "cc43ebf2-9d2a-4415-9227-4e578fb9c1a0",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "me"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Health",
+      "id": "121ada62-212b-4bad-910f-7c506cd9e586",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Webhook",
+      "id": "4345e0bc-5499-4f34-a2af-7374448cf820",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "X-Webhook-Secret",
+            "value": "tokensupersecretoWebhookproviderTest456773",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"event\": {\r\n        \"eventSlug\": \"message.outgoing\"\r\n    },\r\n    \"message\": {\r\n        \"id\": \"35791\",\r\n        \"date\": \"2025-04-07T14:32:09+02:00\",\r\n        \"stateDate\": \"2025-04-07T14:32:09+02:00\",\r\n        \"stateSlug\": \"RECEIVED\",\r\n        \"channel\": {\r\n            \"channelTypeSlug\": \"WHATSAPP\",\r\n            \"to\": \"+34615661316\",\r\n            \"from\": \"+34628143693\",\r\n            \"phoneDetailTo\": {\r\n                \"phone\": \"+phoneTo\",\r\n                \"countryCode\": \"54\",\r\n                \"nationalNumber\": \"phoneTo\",\r\n                \"regionCode\": \"AR\"\r\n            },\r\n            \"phoneDetailFrom\": {\r\n                \"phone\": \"+phoneFrom\",\r\n                \"countryCode\": \"34\",\r\n                \"nationalNumber\": \"phoneFrom\",\r\n                \"regionCode\": \"ES\"\r\n            }\r\n        },\r\n        \"text\": \"Hola, prueba 3\",\r\n        \"messageTypeSlug\": \"INCOMING_MESSAGE\",\r\n        \"group\": {\r\n            \"id\": 16,\r\n            \"groupName\": \"Atencion\"\r\n        },\r\n        \"conversation\": {\r\n            \"id\": 1072,\r\n            \"group\": {\r\n                \"id\": 16,\r\n                \"groupName\": \"Atencion\",\r\n                \"company\": {\r\n                    \"id\": 5,\r\n                    \"companyName\": \"WHANMO\",\r\n                    \"isPendingApiConfiguration\": false\r\n                }\r\n            }\r\n        },\r\n        \"conversationTicket\": {\r\n            \"id\": 1884\r\n        },\r\n        \"urlButton\": \"\",\r\n        \"isRgpd\": 0,\r\n        \"isFlow\": 0\r\n    },\r\n    \"conversation\": {\r\n        \"id\": 1072,\r\n        \"channel\": {\r\n            \"channelTypeSlug\": \"WHATSAPP\",\r\n            \"to\": \"+phoneTo\",\r\n            \"from\": \"+phoneFrom\",\r\n            \"phoneDetailTo\": {\r\n                \"phone\": \"+phoneTo\",\r\n                \"countryCode\": \"54\",\r\n                \"nationalNumber\": \"phoneTo\",\r\n                \"regionCode\": \"AR\"\r\n            },\r\n            \"phoneDetailFrom\": {\r\n                \"phone\": \"+phoneFrom\",\r\n                \"countryCode\": \"34\",\r\n                \"nationalNumber\": \"phoneFrom\",\r\n                \"regionCode\": \"ES\"\r\n            }\r\n        },\r\n        \"agent\": {\r\n            \"id\": \"41\",\r\n            \"firstName\": \"First Name\",\r\n            \"lastName\": \"Last Name\",\r\n            \"locale\": \"es\",\r\n            \"username\": \"mail@motorflash.com\",\r\n            \"incomingMessageDesktopNotification\": true,\r\n            \"incomingMessageSoundNotification\": true\r\n        },\r\n        \"customer\": {\r\n            \"id\": 1052,\r\n            \"firstName\": \"First Name\",\r\n            \"lastName\": \"Last Name\"\r\n        },\r\n        \"group\": {\r\n            \"id\": 16,\r\n            \"groupName\": \"Atencion\",\r\n            \"company\": {\r\n                \"id\": 5,\r\n                \"companyName\": \"WHANMO\",\r\n                \"isPendingApiConfiguration\": false\r\n            }\r\n        },\r\n        \"conversationStateSlug\": \"ASSIGNED\",\r\n        \"waitTime\": 2,\r\n        \"attendedOnTime\": false,\r\n        \"attendedOutOfTime\": false,\r\n        \"notAttended\": true,\r\n        \"transferredOnTime\": false,\r\n        \"transferredOutOfTime\": false,\r\n        \"transferred\": false,\r\n        \"archived\": false,\r\n        \"firstIncomingMessageDate\": \"2024-11-07T23:09:48+01:00\",\r\n        \"conversationTicketsCount\": 18,\r\n        \"lastMessageDate\": \"2025-04-07T14:32:09+02:00\",\r\n        \"isHidden\": false,\r\n        \"conversationPendingInteractionSlug\": \"PENDING_COMPANY_INTERACTION\"\r\n    },\r\n    \"conversationTicket\": {\r\n        \"id\": 1884,\r\n        \"trafficEvent\": {\r\n            \"id\": 123,\r\n            \"trafficCode\": \"N01002\",\r\n            \"utmSource\": \"direct\",\r\n            \"utmMedium\": \"none\",\r\n            \"utmTerm\": \"\",\r\n            \"utmContent\": \"\",\r\n            \"utmCampaign\": \"\",\r\n            \"urlOrigin\": \"\",\r\n            \"eventType\": \"Muestra\",\r\n            \"eventLocation\": \"Ficha\",\r\n            \"eventCta\": \"Muestra:Ficha\",\r\n            \"productId\": \"2336-plk\",\r\n            \"productUrl\": \"faster/588\",\r\n            \"productDescription\": \"GTFRRE\",\r\n            \"RGPD\": false,\r\n            \"createdAt\": \"2025-04-07T14:32:12+02:00\"\r\n        }\r\n    },\r\n    \"UID\": \"68b0000000004\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/provider",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "webhooks",
+            "provider"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

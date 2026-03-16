@@ -36,11 +36,28 @@ arquitectura backend tipo **MVC**.
 
 ### Testing
 
--   Postman
+-   Postman (colección incluida en /postman/collections)
 
 ### Exposición pública local
 
 -   Cloudflare Tunnel
+
+------------------------------------------------------------------------
+
+## Coleccion Postman
+
+En la raiz del proyecto encontraras el archivo `PowerChat.postman_collection.json`
+con todas las peticiones de la API listas para importar en Postman.
+
+Incluye:
+
+-   Auth (login con guardado automatico del token)
+-   Conversaciones (listar, ver, asignar, mensajes, estado, leer)
+-   Webhooks (simulacion de eventos del proveedor)
+-   Instrucciones para probar el WebSocket con Socket.IO
+-   Falta por añadir - Usuarios (CRUD completo)
+
+Para importarla: abre Postman → **Import** → selecciona el archivo.
 
 ------------------------------------------------------------------------
 
