@@ -144,6 +144,24 @@ npx prisma generate --schema=prisma/schema.prisma
 npx prisma migrate dev --name init --schema=prisma/schema.prisma
 ```
 
+## Seed — usuario por defecto
+
+El seed crea el usuario inicial necesario para hacer login:
+
+    Email:    user@gmail.com
+    Password: user1234
+    Rol:      ADMIN
+
+**En desarrollo** (`migrate dev`), el seed se ejecuta automáticamente al final de las migraciones. No hace falta lanzarlo a mano.
+
+**En producción** (`migrate deploy`), el seed NO se ejecuta automáticamente. Hay que lanzarlo una vez de forma manual:
+
+``` bash
+npx prisma db seed
+```
+
+El seed es idempotente: si el usuario ya existe no se duplica.
+
 ## Abrir Prisma Studio
 
 ``` bash
@@ -213,6 +231,13 @@ Ruta de prueba:
 
 -   `GET /conversations/:id/messages`
 -   `POST /conversations/:id/messages`
+
+## Usuarios
+
+-   `GET /users`
+-   `POST /users`
+-   `PATCH /users/:id`
+-   `DELETE /users/:id`
 
 ## Webhook
 
