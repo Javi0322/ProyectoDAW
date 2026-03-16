@@ -343,6 +343,8 @@ cloudflared tunnel run powerchat-webhook
 
 # 13. Configuración del proveedor
 
+Si quieres probar el envío de mensajes ahy que configurarlo en el proveedor. (Avisame por correo con estas credenciales para configurarlas, no funciona con localhost)
+
 Webhook URL:
 
     https://webhook.tudominio.com/webhooks/provider
@@ -351,7 +353,6 @@ Header requerido:
 
     X-Webhook-Secret: TU_SECRETO
 
-Si quieres probar el envío de mensajes hay que configurarlo en el proveedor. (Avisame por correo con estas crendenciales para configurarlas, no funciona con localhost )
 ------------------------------------------------------------------------
 
 # 14. Comandos útiles
