@@ -3,12 +3,10 @@
 Aplicación backend tipo **Inbox de mensajería WhatsApp multiagente**,
 conectada a un proveedor externo que:
 
--   permite enviar mensajes por API
--   envía eventos por **webhook**
--   notifica mensajes entrantes, salientes y actualizaciones de estado
-
-Este proyecto está orientado a un Proyecto DAW y está construido con una
-arquitectura backend tipo **MVC**.
+-   Permite enviar mensajes por API
+-   Envía eventos por **webhook**
+-   Notifica mensajes entrantes, salientes y actualizaciones de estado por websocket
+-   Está construido con una arquitectura tipo **MVC**.
 
 ------------------------------------------------------------------------
 
