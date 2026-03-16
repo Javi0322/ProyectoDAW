@@ -1,4 +1,4 @@
-# ProyectoDAW - Inbox WhatsApp Multiagente
+# PowerChat - Inbox WhatsApp Multiagente
 
 Aplicación backend tipo **Inbox de mensajería WhatsApp multiagente**,
 conectada a un proveedor externo que:
@@ -284,19 +284,19 @@ cloudflared tunnel login
 ## Crear túnel
 
 ``` bash
-cloudflared tunnel create proyectodaw-webhook
+cloudflared tunnel create powerchat-webhook
 ```
 
 ## Asociar DNS
 
 ``` bash
-cloudflared tunnel route dns proyectodaw-webhook webhook.tudominio.com
+cloudflared tunnel route dns powerchat-webhook webhook.tudominio.com
 ```
 
 ## Ejecutar túnel
 
 ``` bash
-cloudflared tunnel run proyectodaw-webhook
+cloudflared tunnel run powerchat-webhook
 ```
 
 ------------------------------------------------------------------------
@@ -311,6 +311,7 @@ Header requerido:
 
     X-Webhook-Secret: TU_SECRETO
 
+Si quieres probar el envío de mensajes hay que configurarlo en el proveedor. (Avisame por correo con estas crendenciales para configurarlas, no funciona con localhost )
 ------------------------------------------------------------------------
 
 # 14. Comandos útiles
@@ -342,7 +343,7 @@ npx prisma studio
 Arrancar Cloudflare Tunnel:
 
 ``` bash
-cloudflared tunnel run proyectodaw-webhook
+cloudflared tunnel run powerchat-webhook
 ```
 
 ------------------------------------------------------------------------
@@ -360,7 +361,7 @@ Frontend
 
 ------------------------------------------------------------------------
 
-# 16. Posibles mejoras
+# 16. En proceso / mejoras
 
 -   Refresh tokens
 -   Frontend SPA completo
