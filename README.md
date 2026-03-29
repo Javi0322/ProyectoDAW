@@ -3,12 +3,10 @@
 Aplicación backend tipo **Inbox de mensajería WhatsApp multiagente**,
 conectada a un proveedor externo que:
 
--   permite enviar mensajes por API
--   envía eventos por **webhook**
--   notifica mensajes entrantes, salientes y actualizaciones de estado
-
-Este proyecto está orientado a un Proyecto DAW y está construido con una
-arquitectura backend tipo **MVC**.
+-   Permite enviar mensajes por API
+-   Envía eventos por **webhook**
+-   Notifica mensajes entrantes, salientes y actualizaciones de estado por websocket
+-   Está construido con una arquitectura tipo **MVC**.
 
 ------------------------------------------------------------------------
 
@@ -345,6 +343,8 @@ cloudflared tunnel run powerchat-webhook
 
 # 13. Configuración del proveedor
 
+Si quieres probar el envío de mensajes ahy que configurarlo en el proveedor. (Avisame por correo con estas credenciales para configurarlas, no funciona con localhost)
+
 Webhook URL:
 
     https://webhook.tudominio.com/webhooks/provider
@@ -353,7 +353,6 @@ Header requerido:
 
     X-Webhook-Secret: TU_SECRETO
 
-Si quieres probar el envío de mensajes hay que configurarlo en el proveedor. (Avisame por correo con estas crendenciales para configurarlas, no funciona con localhost )
 ------------------------------------------------------------------------
 
 # 14. Comandos útiles
