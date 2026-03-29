@@ -1,5 +1,6 @@
 <template>
   <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
         <tr class="border-b border-zinc-200 dark:border-zinc-800">
@@ -105,6 +106,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </template>
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="px-4 py-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
+  <div class="px-3 md:px-4 py-2 md:py-3 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 shrink-0">
     <div
       class="flex items-end gap-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl border transition-all duration-150"
       :class="isFocused

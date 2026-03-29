@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-zinc-50 dark:bg-brand-primary pl-14">
+  <div class="min-h-screen bg-zinc-50 dark:bg-brand-primary md:pl-14 pb-14 md:pb-0">
     <AppNavbar />
 
-    <main class="max-w-6xl w-full mx-auto px-6 py-8">
+    <main class="max-w-6xl w-full mx-auto px-4 md:px-6 py-8">
       <!-- Page header -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0 mb-8">
         <div>
           <h1 class="font-display font-bold text-2xl text-zinc-900 dark:text-zinc-100">
             Gestión de usuarios

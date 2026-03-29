@@ -28,7 +28,7 @@
       <!-- Messages area -->
       <div
         ref="scrollRef"
-        class="flex-1 overflow-y-auto px-5 py-4 space-y-1"
+        class="flex-1 overflow-y-auto px-3 md:px-5 py-3 md:py-4 space-y-1"
       >
         <!-- Load more older messages -->
         <div v-if="convStore.hasMore" class="flex justify-center pb-2">

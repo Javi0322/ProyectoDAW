@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
     disconnectSocket()
     // Reset the conversations store without importing its module (avoids circular dependency).
     // getActivePinia gives access to any registered store by id at runtime.
-    getActivePinia()?._s.get('conversations')?.$reset()
+    try { getActivePinia()?._s.get('conversations')?.$reset() } catch { /* setup stores no soportan $reset */ }
   }
 
   async function loadFromStorage() {

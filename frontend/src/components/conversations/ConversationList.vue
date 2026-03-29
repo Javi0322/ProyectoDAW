@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-[340px] shrink-0 flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 h-full">
+  <aside class="w-full md:w-[340px] shrink-0 flex flex-col bg-white dark:bg-zinc-900 border-r border-zinc-200 dark:border-zinc-800 h-full">
     <!-- Header -->
     <div class="flex items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800">
       <h2 class="font-display font-semibold text-sm text-zinc-900 dark:text-zinc-100">

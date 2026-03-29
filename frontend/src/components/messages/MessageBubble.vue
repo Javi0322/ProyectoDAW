@@ -4,7 +4,7 @@
     :class="message.direction === 'OUT' ? 'justify-end' : 'justify-start'"
   >
     <div
-      class="max-w-[72%] flex flex-col gap-1"
+      class="max-w-[88%] md:max-w-[72%] flex flex-col gap-1"
       :class="message.direction === 'OUT' ? 'items-end' : 'items-start'"
     >
       <div
