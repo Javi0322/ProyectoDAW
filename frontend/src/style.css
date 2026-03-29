@@ -1,20 +1,11 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Configuración del modo oscuro por clase en el elemento html */
-@custom-variant dark (&:where(.dark, .dark *));
-
-@theme {
-  --color-brand-primary: #2b2b2b;
-  --color-brand-accent: #63e2b9;
-
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-}
-
-/* Estilos base */
 @layer base {
   html {
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -25,19 +16,33 @@
     @apply bg-brand-primary text-zinc-100;
   }
 
-  /* Scrollbar personalizada */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { @apply bg-zinc-300 dark:bg-zinc-600 rounded-full; }
-  ::-webkit-scrollbar-thumb:hover { @apply bg-zinc-400 dark:bg-zinc-500; }
+  * {
+    @apply border-zinc-200 dark:border-zinc-700;
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-300 dark:bg-zinc-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-400 dark:bg-zinc-500;
+  }
 }
 
-/* Clases reutilizables */
 @layer components {
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
            bg-brand-accent text-brand-primary font-medium text-sm
-           hover:opacity-90 active:scale-95 transition-all duration-150
+           hover:bg-opacity-90 active:scale-95 transition-all duration-150
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
   }
 
@@ -52,6 +57,13 @@
     @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg
            text-zinc-600 dark:text-zinc-400 font-medium text-sm
            hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition-all duration-150;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
+           bg-red-500 text-white font-medium text-sm
+           hover:bg-red-600 active:scale-95 transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .input-field {
@@ -69,5 +81,9 @@
 
   .card {
     @apply bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-sm;
+  }
+
+  .status-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-mono;
   }
 }

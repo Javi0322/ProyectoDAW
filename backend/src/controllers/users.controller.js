@@ -4,7 +4,7 @@ const { hashPassword } = require("../services/password.service");
 async function listUsers(req, res) {
   const role = String(req.user.role || "").trim().toUpperCase();
 
-  if (role !== "ADMIN" && role !== "SUPERVISOR") {
+  if (role !== "ADMIN") {
     return res.status(403).json({ ok: false, error: "forbidden" });
   }
 
@@ -17,6 +17,7 @@ async function listUsers(req, res) {
       lastName: true,
       role: true,
       active: true,
+      avatarUrl: true,
       createdAt: true,
     },
   });
@@ -39,6 +40,10 @@ async function createUser(req, res) {
 
   if (!email || !password || !firstName || !lastName) {
     return res.status(400).json({ ok: false, error: "email, password, firstName and lastName are required" });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ ok: false, error: "password must be at least 8 characters" });
   }
 
   if (!["ADMIN", "SUPERVISOR", "AGENT"].includes(newRole)) {
@@ -76,10 +81,20 @@ async function updateUser(req, res) {
   if (req.body.firstName) data.firstName = String(req.body.firstName).trim();
   if (req.body.lastName)  data.lastName  = String(req.body.lastName).trim();
   if (req.body.email)     data.email     = String(req.body.email).trim().toLowerCase();
+  if (req.body.password) {
+    const pwd = String(req.body.password).trim();
+    if (pwd.length < 8) {
+      return res.status(400).json({ ok: false, error: "password must be at least 8 characters" });
+    }
+    data.password = await hashPassword(pwd);
+  }
   if (req.body.role) {
     const r = String(req.body.role).trim().toUpperCase();
     if (!["ADMIN", "SUPERVISOR", "AGENT"].includes(r)) {
       return res.status(400).json({ ok: false, error: "invalid role" });
+    }
+    if (userId === Number(req.user.sub)) {
+      return res.status(403).json({ ok: false, error: "cannot change your own role" });
     }
     data.role = r;
   }

@@ -1,7 +1,14 @@
-<script setup></script>
-
 <template>
-<RouterView/>
+  <RouterView />
 </template>
 
-<style scoped></style>
+<script setup>
+import { onMounted } from 'vue'
+import { useThemeStore } from '@/stores/theme.js'
+
+const themeStore = useThemeStore()
+
+onMounted(() => {
+  themeStore.init()
+})
+</script>

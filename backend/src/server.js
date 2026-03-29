@@ -11,15 +11,18 @@ const http = require("http");
 const { Server } = require("socket.io");
 const { setSocketServer } = require("./socket");
 const jwt = require("jsonwebtoken");
+const { prisma } = require("./prisma/client");
 
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN }));
-app.use(express.json());
-app.use("/auth", authRoutes);
-app.use("/me", meRoutes);
-app.use("/webhooks", webhooksRoutes);
-app.use("/conversations", conversationsRoutes);
-app.use("/users", usersRoutes);
+const jsonStrict = express.json({ limit: '64kb' });
+const jsonWebhook = express.json({ limit: '1mb' });
+
+app.use("/auth", jsonStrict, authRoutes);
+app.use("/me", jsonStrict, meRoutes);
+app.use("/webhooks", jsonWebhook, webhooksRoutes);
+app.use("/conversations", jsonStrict, conversationsRoutes);
+app.use("/users", jsonStrict, usersRoutes);
 
 
 // Ruta de prueba
@@ -49,7 +52,7 @@ io.use((socket, next) => {
       return next(new Error("unauthorized"));
     }
 
-    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] });
 
     socket.user = {
       id: payload.sub,
@@ -72,10 +75,35 @@ io.on("connection", (socket) => {
   socket.join(`user:${userId}`);
   socket.join(`role:${userRole}`);
 
-  socket.on("conversation:join", (conversationId) => {
-    const room = `conversation:${conversationId}`;
-    socket.join(room);
-    console.log(`socket ${socket.user.id} joined ${room}`);
+  socket.on("conversation:join", async (conversationId) => {
+    const id = Number(conversationId);
+    if (!Number.isInteger(id) || id <= 0) return;
+
+    const { role } = socket.user;
+    const userId = Number(socket.user.id);
+
+    if (role === "ADMIN" || role === "SUPERVISOR") {
+      socket.join(`conversation:${id}`);
+      console.log(`socket ${userId} joined conversation:${id}`);
+      return;
+    }
+
+    // AGENT: only assigned-to-them or unassigned conversations
+    try {
+      const conversation = await prisma.conversation.findUnique({
+        where: { id },
+        select: { assignedToId: true },
+      });
+
+      if (!conversation) return;
+
+      if (conversation.assignedToId === null || conversation.assignedToId === userId) {
+        socket.join(`conversation:${id}`);
+        console.log(`socket ${userId} joined conversation:${id}`);
+      }
+    } catch {
+      // ignore — do not expose internal errors to the client
+    }
   });
 
   socket.on("conversation:leave", (conversationId) => {

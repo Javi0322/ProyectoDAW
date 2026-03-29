@@ -1,13 +1,9 @@
 const crypto = require("crypto");
 
 function safeCompare(a, b) {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    crypto.timingSafeEqual(bufA, bufA);
-    return false;
-  }
-  return crypto.timingSafeEqual(bufA, bufB);
+  const hashA = crypto.createHmac('sha256', 'compare').update(a).digest();
+  const hashB = crypto.createHmac('sha256', 'compare').update(b).digest();
+  return crypto.timingSafeEqual(hashA, hashB);
 }
 
 function requireWebhookSecret(req, res, next) {

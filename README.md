@@ -15,13 +15,20 @@ conectada a un proveedor externo que:
 ### Backend
 
 -   Node.js
--   Express
+-   Express v5
 -   Prisma ORM
 -   MySQL
 
+### Frontend
+
+-   Vite + Vue 3
+-   Pinia (gestión de estado)
+-   Tailwind CSS
+-   Socket.IO client
+
 ### Autenticación
 
--   JWT
+-   JWT (24h)
 
 ### Seguridad
 
@@ -30,7 +37,7 @@ conectada a un proveedor externo que:
 
 ### Tiempo real
 
--   Socket.IO
+-   Socket.IO v4
 
 ### Testing
 
@@ -50,10 +57,10 @@ con todas las peticiones de la API listas para importar en Postman.
 Incluye:
 
 -   Auth (login con guardado automatico del token)
--   Conversaciones (listar, ver, asignar, mensajes, estado, leer)
+-   Me (perfil propio, subida de avatar)
+-   Conversaciones (listar, ver, asignar, mensajes, estado, leer, contacto)
+-   Usuarios (CRUD completo, requiere rol ADMIN)
 -   Webhooks (simulacion de eventos del proveedor)
--   Instrucciones para probar el WebSocket con Socket.IO
--   Falta por añadir - Usuarios (CRUD completo)
 
 Para importarla: abre Postman → **Import** → selecciona el archivo.
 
@@ -114,6 +121,8 @@ Ejemplo:
     MESSAGE_API_PASSWORD=password_del_proveedor
     MESSAGE_API_FROM=+34615661316
 
+    CORS_ORIGIN=http://localhost:5173
+
 ------------------------------------------------------------------------
 
 # 4. Base de datos
@@ -170,6 +179,8 @@ npx prisma studio --schema=prisma/schema.prisma
 
 # 6. Arrancar el proyecto
 
+## Backend
+
 Desde `backend/`:
 
 ``` bash
@@ -184,9 +195,22 @@ Ruta de prueba:
 
     http://localhost:3000/health
 
+## Frontend
+
+Desde `frontend/`:
+
+``` bash
+npm install
+npm run dev
+```
+
+Aplicación disponible en:
+
+    http://localhost:5173
+
 ------------------------------------------------------------------------
 
-# 7. Estructura del backend
+# 7. Estructura del proyecto
 
     backend/
      ├─ prisma/
@@ -204,8 +228,22 @@ Ruta de prueba:
      │   └─ server.js
      │
      ├─ .env
-     ├─ package.json
-     └─ README.md
+     └─ package.json
+
+    frontend/
+     ├─ src/
+     │   ├─ api/
+     │   ├─ components/
+     │   ├─ router/
+     │   ├─ socket/
+     │   ├─ stores/
+     │   ├─ views/
+     │   ├─ App.vue
+     │   └─ main.js
+     │
+     ├─ index.html
+     ├─ vite.config.js
+     └─ package.json
 
 ------------------------------------------------------------------------
 
@@ -214,7 +252,11 @@ Ruta de prueba:
 ## Auth
 
 -   `POST /auth/login`
+
+## Me
+
 -   `GET /me`
+-   `POST /me/avatar`
 
 ## Conversaciones
 
@@ -224,13 +266,15 @@ Ruta de prueba:
 -   `POST /conversations/:id/assign`
 -   `POST /conversations/:id/unassign`
 -   `PATCH /conversations/:id/status`
+-   `POST /conversations/:id/read`
+-   `PATCH /conversations/:id/contact`
 
 ## Mensajes
 
 -   `GET /conversations/:id/messages`
 -   `POST /conversations/:id/messages`
 
-## Usuarios
+## Usuarios (requiere rol ADMIN)
 
 -   `GET /users`
 -   `POST /users`
@@ -254,9 +298,10 @@ Ruta de prueba:
 -   id
 -   email
 -   password
--   role
+-   role (`ADMIN` / `SUPERVISOR` / `AGENT`)
 -   firstName
 -   lastName
+-   avatarUrl
 -   active
 -   createdAt
 -   updatedAt
@@ -266,7 +311,8 @@ Ruta de prueba:
 -   id
 -   externalId
 -   customerPhone
--   status
+-   contactName
+-   status (`OPEN` / `PENDING` / `CLOSED`)
 -   assignedToId
 -   lastMessageAt
 -   lastMessageText
@@ -277,17 +323,68 @@ Ruta de prueba:
 
 -   id
 -   externalId
--   direction
--   state
+-   direction (`IN` / `OUT`)
+-   state (`PENDING` / `SENT` / `RECEIVED` / `READ` / `ERROR` / `DELETED`)
 -   text
 -   occurredAt
 -   stateAt
 -   conversationId
+-   sentById
 -   createdAt
+
+## ConversationUserState
+
+-   id
+-   conversationId
+-   userId
+-   lastReadAt
 
 ------------------------------------------------------------------------
 
-# 10. Webhook del proveedor
+# 10. Dependencias
+
+## Backend
+
+| Paquete | Por qué se usa |
+|---------|---------------|
+| `express` | Framework HTTP para definir rutas, middlewares y controladores (MVC) |
+| `@prisma/client` | Cliente ORM para interactuar con MySQL de forma tipada y segura |
+| `jsonwebtoken` | Generación y verificación de tokens JWT para autenticación |
+| `socket.io` | Comunicación bidireccional en tiempo real (mensajes entrantes, estados) |
+| `cors` | Permite peticiones desde el frontend en `localhost:5173` |
+| `dotenv` | Carga las variables de entorno desde el archivo `.env` |
+| `express-rate-limit` | Limita intentos de login (3 por cada 15s) para evitar fuerza bruta |
+| `multer` | Gestiona la subida de archivos (avatares de usuario) |
+
+### DevDependencies (backend)
+
+| Paquete | Por qué se usa |
+|---------|---------------|
+| `nodemon` | Reinicia el servidor automáticamente al guardar cambios durante el desarrollo |
+| `prisma` | CLI para gestionar el schema, migraciones y seed de la base de datos |
+
+## Frontend
+
+| Paquete | Por qué se usa |
+|---------|---------------|
+| `vue` | Framework reactivo para construir la interfaz de usuario (SPA) |
+| `vue-router` | Gestiona la navegación entre vistas (login, bandeja, perfil, usuarios) |
+| `pinia` | Store de estado global (auth, conversaciones, tema) |
+| `axios` | Cliente HTTP para llamar a la API REST del backend |
+| `socket.io-client` | Conecta el frontend al servidor Socket.IO para recibir eventos en tiempo real |
+
+### DevDependencies (frontend)
+
+| Paquete | Por qué se usa |
+|---------|---------------|
+| `vite` | Bundler ultrarrápido que sirve el frontend en desarrollo |
+| `@vitejs/plugin-vue` | Plugin de Vite para procesar componentes `.vue` |
+| `tailwindcss` | Framework CSS de utilidades para estilizar los componentes |
+| `postcss` + `autoprefixer` | Procesado de CSS necesario para que Tailwind funcione correctamente |
+
+------------------------------------------------------------------------
+
+# 11. Webhook del proveedor
 
 Endpoint:
 
@@ -301,7 +398,7 @@ Eventos soportados:
 
 ------------------------------------------------------------------------
 
-# 11. Seguridad del webhook
+# 12. Seguridad del webhook
 
 Header requerido:
 
@@ -313,7 +410,7 @@ Variable de entorno:
 
 ------------------------------------------------------------------------
 
-# 12. Exponer el webhook con Cloudflare Tunnel
+# 13. Exponer el webhook con Cloudflare Tunnel
 
 ## Login
 
@@ -341,7 +438,7 @@ cloudflared tunnel run powerchat-webhook
 
 ------------------------------------------------------------------------
 
-# 13. Configuración del proveedor
+# 14. Configuración del proveedor
 
 Si quieres probar el envío de mensajes ahy que configurarlo en el proveedor. (Avisame por correo con estas credenciales para configurarlas, no funciona con localhost)
 
@@ -355,7 +452,7 @@ Header requerido:
 
 ------------------------------------------------------------------------
 
-# 14. Comandos útiles
+# 15. Comandos útiles
 
 Arrancar backend:
 
@@ -389,7 +486,7 @@ cloudflared tunnel run powerchat-webhook
 
 ------------------------------------------------------------------------
 
-# 15. Flujo de funcionamiento
+# 16. Flujo de funcionamiento
 
 ### Mensaje entrante
 
@@ -402,7 +499,7 @@ Frontend
 
 ------------------------------------------------------------------------
 
-# 16. En proceso / mejoras
+# 17. En proceso / mejoras
 
 -   Refresh tokens
 -   Frontend SPA completo

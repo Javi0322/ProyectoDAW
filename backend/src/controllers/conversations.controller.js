@@ -38,9 +38,11 @@ async function listConversations(req, res) {
   if (role === "AGENT") {
     if (scope === "unassigned") {
       where.assignedToId = null;
-    } else {
-      // mine por defecto
+    } else if (scope === "mine") {
       where.assignedToId = userId;
+    } else {
+      // all: las suyas + las sin asignar
+      where.OR = [{ assignedToId: userId }, { assignedToId: null }];
     }
   } else {
     // SUPERVISOR o ADMIN
@@ -66,6 +68,7 @@ async function listConversations(req, res) {
         status: true,
         assignedToId: true,
         customerPhone: true,
+        contactName: true,
         lastMessageAt: true,
         lastMessageText: true,
         updatedAt: true,
@@ -133,6 +136,7 @@ async function assignToMe(req, res) {
 
     const conversation = await prisma.conversation.findUnique({
       where: { id },
+      include: { assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, role: true } } },
     });
 
     emitToConversationAudience("conversation:assign", { conversation }, true);
@@ -144,6 +148,7 @@ async function assignToMe(req, res) {
   const conversation = await prisma.conversation.update({
     where: { id },
     data: { assignedToId: userId },
+    include: { assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, role: true } } },
   });
 
   emitToConversationAudience("conversation:assign", {conversation}, true );
@@ -181,6 +186,7 @@ async function assign(req, res) {
   const conversation = await prisma.conversation.update({
     where: { id: conversationId },
     data: { assignedToId: targetUserId },
+    include: { assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, role: true } } },
   });
 
   emitToConversationAudience("conversation:assign", {conversation}, true);
@@ -209,7 +215,8 @@ async function unassign(req, res) {
     }
 
     const conversation = await prisma.conversation.findUnique({
-      where: { id : conversationId },
+      where: { id: conversationId },
+      include: { assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, role: true } } },
     });
 
     emitToConversationAudience("conversation:assign", { conversation }, true);
@@ -222,6 +229,7 @@ async function unassign(req, res) {
     const conversation = await prisma.conversation.update({
       where: { id: conversationId },
       data: { assignedToId: null },
+      include: { assignedTo: { select: { id: true, firstName: true, lastName: true, email: true, role: true } } },
     });
 
     emitToConversationAudience("conversation:assign", { conversation }, true);
@@ -285,6 +293,7 @@ async function getConversationMessages(req, res) {
       occurredAt: true,
       stateAt: true,
       createdAt: true,
+      sentBy: { select: { id: true, firstName: true, lastName: true } },
     },
   });
 
@@ -366,6 +375,7 @@ async function sendMessage(req, res) {
               occurredAt : now,
               stateAt : providerMessage.stateDate,
               conversationId: conversation.id,
+              sentById: userId,
             },
           });
 
@@ -377,9 +387,24 @@ async function sendMessage(req, res) {
       },
     });
 
+    const fullMessage = await prisma.message.findUnique({
+      where: { id: message.id },
+      select: {
+        id: true,
+        externalId: true,
+        direction: true,
+        state: true,
+        text: true,
+        occurredAt: true,
+        stateAt: true,
+        createdAt: true,
+        sentBy: { select: { id: true, firstName: true, lastName: true } },
+      },
+    });
+
     return res.status(201).json({
       ok: true,
-      message,
+      message: fullMessage,
     });
   } catch (error) {
     console.error("sendMessage error:", error);
@@ -405,6 +430,7 @@ async function getConversationById(req, res) {
       id: true,
       externalId: true,
       customerPhone: true,
+      contactName: true,
       status: true,
       assignedToId: true,
       lastMessageAt: true,
@@ -535,28 +561,38 @@ async function markConversationAsRead(req, res) {
 
   const readAt = conversation.lastMessageAt || new Date();
 
-  const state = await prisma.conversationUserState.upsert({
-    where: {
-      conversationId_userId: {
+  const [state] = await prisma.$transaction([
+    prisma.conversationUserState.upsert({
+      where: {
+        conversationId_userId: {
+          conversationId,
+          userId,
+        },
+      },
+      update: {
+        lastReadAt: readAt,
+      },
+      create: {
         conversationId,
         userId,
+        lastReadAt: readAt,
       },
-    },
-    update: {
-      lastReadAt: readAt,
-    },
-    create: {
-      conversationId,
-      userId,
-      lastReadAt: readAt,
-    },
-    select: {
-      id: true,
-      conversationId: true,
-      userId: true,
-      lastReadAt: true,
-    },
-  });
+      select: {
+        id: true,
+        conversationId: true,
+        userId: true,
+        lastReadAt: true,
+      },
+    }),
+    prisma.message.updateMany({
+      where: {
+        conversationId,
+        direction: 'IN',
+        state: { not: 'READ' },
+      },
+      data: { state: 'READ' },
+    }),
+  ]);
 
   return res.json({
     ok: true,
@@ -564,14 +600,51 @@ async function markConversationAsRead(req, res) {
   });
 }
 
-module.exports = { 
-  listConversations, 
-  assignToMe, 
-  assign, 
-  unassign, 
+async function updateContactName(req, res) {
+  const conversationId = Number(req.params.id);
+  const userId = Number(req.user.sub);
+  const role = String(req.user.role || "").trim().toUpperCase();
+  const name = String(req.body.name ?? "").trim();
+
+  if (!conversationId) {
+    return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  }
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true, assignedToId: true },
+  });
+
+  if (!conversation) {
+    return res.status(404).json({ ok: false, error: "conversation not found" });
+  }
+
+  if (role === "AGENT") {
+    const canAccess =
+      conversation.assignedToId === null || conversation.assignedToId === userId;
+    if (!canAccess) {
+      return res.status(403).json({ ok: false, error: "forbidden" });
+    }
+  }
+
+  const updated = await prisma.conversation.update({
+    where: { id: conversationId },
+    data: { contactName: name || null },
+    select: { id: true, contactName: true },
+  });
+
+  return res.json({ ok: true, conversation: updated });
+}
+
+module.exports = {
+  listConversations,
+  assignToMe,
+  assign,
+  unassign,
   getConversationMessages,
   sendMessage,
   getConversationById,
   updateConversationStatus,
-  markConversationAsRead
+  markConversationAsRead,
+  updateContactName
                  };

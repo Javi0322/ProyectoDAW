@@ -1,64 +1,48 @@
-<script setup>
-import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth.js'
-
-const router = useRouter()
-const authStore = useAuthStore()
-
-// Agrupamos los campos del formulario en un objeto reactivo
-const form = reactive({ email: '', password: '' })
-const loading = ref(false)
-const error = ref('')
-const showPassword = ref(false)
-
-async function handleLogin() {
-  error.value = ''
-  loading.value = true
-  try {
-    await authStore.login(form.email, form.password)
-    router.push('/')
-  } catch (err) {
-    // Mostramos el error del servidor o un mensaje genérico
-    error.value = err.response?.data?.error || 'Credenciales incorrectas. Inténtalo de nuevo.'
-  } finally {
-    loading.value = false
-  }
-}
-</script>
-
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-brand-primary">
-    <div class="w-full max-w-sm px-6">
+  <div class="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-brand-primary relative overflow-hidden">
+    <!-- Background geometric decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-brand-accent/5 blur-3xl"></div>
+      <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-brand-accent/5 blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-zinc-200/50 dark:border-zinc-800/50 rounded-full"></div>
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-zinc-200/30 dark:border-zinc-800/30 rounded-full"></div>
+    </div>
 
-      <div class="text-center mb-8">
-        <img src='/logo.jpg' class="w-24 h-24 rounded-2xl object-cover mx-auto mb-8">
-        <h1 class="text-3xl font-bold text-zinc-900 dark:text-zinc-100">PowerChat</h1>
-        <p class="text-base text-zinc-500 dark:text-zinc-400 mt-1">Bandeja de entrada multiagente</p>
+    <div class="relative w-full max-w-sm mx-auto px-6 animate-slide-up">
+      <!-- Logo / Brand -->
+      <div class="text-center mb-10">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-accent mb-4">
+          <svg class="w-6 h-6 text-brand-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        </div>
+        <h1 class="font-display text-2xl font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+          ProyectoDAW
+        </h1>
+        <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Bandeja de entrada multiagente</p>
       </div>
 
-      <!-- Tarjeta del formulario -->
+      <!-- Form card -->
       <div class="card p-8">
-        <h2 class="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-6">Iniciar sesión</h2>
+        <h2 class="font-display text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
+          Iniciar sesión
+        </h2>
 
-        <!-- Formulario de login -->
-        <form @submit.prevent="handleLogin" class="flex flex-col gap-5">
-
-          <!-- Campo email -->
+        <form @submit.prevent="handleLogin" class="space-y-5">
           <div>
             <label for="email" class="label-text">Correo electrónico</label>
             <input
               id="email"
               v-model="form.email"
               type="email"
+              autocomplete="email"
               required
+              class="input-field"
               placeholder="usuario@empresa.com"
               :disabled="loading"
-              class="input-field"
             />
           </div>
 
-          <!-- Campo contraseña -->
           <div>
             <label for="password" class="label-text">Contraseña</label>
             <div class="relative">
@@ -66,16 +50,16 @@ async function handleLogin() {
                 id="password"
                 v-model="form.password"
                 :type="showPassword ? 'text' : 'password'"
+                autocomplete="current-password"
                 required
+                class="input-field pr-10"
                 placeholder="••••••••"
                 :disabled="loading"
-                class="input-field pr-10"
               />
-              <!-- Botón para mostrar/ocultar contraseña -->
               <button
                 type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors"
                 @click="showPassword = !showPassword"
-                class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
               >
                 <svg v-if="!showPassword" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -88,27 +72,73 @@ async function handleLogin() {
             </div>
           </div>
 
-          <!-- Mensaje de error si el login falla -->
-          <div v-if="error" class="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
-            <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
-          </div>
+          <!-- Error -->
+          <Transition name="fade">
+            <div v-if="error" class="flex items-start gap-2.5 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50">
+              <svg class="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
+            </div>
+          </Transition>
 
-          <!-- Botón de submit -->
-          <button type="submit" :disabled="loading" class="btn-primary w-full py-3">
+          <button
+            type="submit"
+            class="btn-primary w-full py-3 text-base"
+            :disabled="loading"
+          >
             <svg v-if="loading" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
             <span>{{ loading ? 'Entrando...' : 'Entrar' }}</span>
           </button>
-
         </form>
       </div>
 
-      <p class="text-center text-xs text-zinc-400 dark:text-zinc-600 mt-6">PowerChat — v0.1</p>
+      <p class="text-center text-xs text-zinc-400 dark:text-zinc-600 mt-6">
+        WhatsApp Inbox — v0.1
+      </p>
     </div>
   </div>
 </template>
+
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.js'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+const form = reactive({ email: '', password: '' })
+const loading = ref(false)
+const error = ref('')
+const showPassword = ref(false)
+
+async function handleLogin() {
+  error.value = ''
+  loading.value = true
+  try {
+    await authStore.login(form.email, form.password)
+    router.push('/')
+  } catch (err) {
+    const msg = err.response?.data?.error
+    error.value = msg || 'Credenciales incorrectas. Inténtalo de nuevo.'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>

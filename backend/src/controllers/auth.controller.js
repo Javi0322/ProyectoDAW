@@ -12,12 +12,12 @@ async function login(req, res) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (!user || user.active === false) {
-    return res.status(401).json({ ok: false, error: "invalid credentials" });
+    return res.status(401).json({ ok: false, error: "Usuario o contraseña incorrectos" });
   }
 
   const passOk = await verifyPassword(password, user.password);
   if (!passOk) {
-    return res.status(401).json({ ok: false, error: "invalid credentials" });
+    return res.status(401).json({ ok: false, error: "Usuario o contraseña incorrectos" });
   }
 
   const token = jwt.sign(
@@ -26,7 +26,18 @@ async function login(req, res) {
     { expiresIn: "24h" }
   );
 
-  return res.json({ ok: true, accessToken: token });
+  return res.json({
+    ok: true,
+    accessToken: token,
+    user: {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+    },
+  });
 }
 
 module.exports = { login };
