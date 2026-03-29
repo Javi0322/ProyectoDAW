@@ -1,1 +1,1 @@
-ALTER TABLE `conversation` ADD COLUMN `contactName` VARCHAR(191) NULL;
+ALTER TABLE `Conversation` ADD COLUMN `contactName` VARCHAR(191) NULL;

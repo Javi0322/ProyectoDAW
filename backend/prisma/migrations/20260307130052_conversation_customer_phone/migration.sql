@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE `conversation` ADD COLUMN `customerPhone` VARCHAR(191) NULL;
+ALTER TABLE `Conversation` ADD COLUMN `customerPhone` VARCHAR(191) NULL;
