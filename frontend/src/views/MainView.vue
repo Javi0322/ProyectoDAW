@@ -1,8 +1,8 @@
 <template>
-  <div class="h-screen flex bg-zinc-50 dark:bg-brand-primary overflow-hidden md:pl-14 pb-14 md:pb-0">
+  <div class="fixed inset-0 bottom-14 md:bottom-0 md:left-14 flex overflow-hidden bg-zinc-50 dark:bg-brand-primary">
     <AppNavbar />
 
-    <div class="flex-1 flex min-h-0">
+    <div class="flex-1 flex min-w-0 min-h-0">
       <ConversationList :class="convStore.activeConversation ? 'hidden md:flex' : 'flex'" />
       <MessageThread :class="!convStore.activeConversation ? 'hidden md:flex' : 'flex'" />
     </div>
