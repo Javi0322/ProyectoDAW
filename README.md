@@ -1,12 +1,12 @@
-# PowerChat - Inbox WhatsApp Multiagente
+# PowerChat — Inbox WhatsApp Multiagente
 
-Aplicación backend tipo **Inbox de mensajería WhatsApp multiagente**,
-conectada a un proveedor externo que:
+Aplicación web completa tipo **bandeja de entrada multiagente para WhatsApp**. Permite que varios agentes reciban, gestionen y respondan conversaciones de WhatsApp desde un único panel, con actualización en tiempo real.
 
--   Permite enviar mensajes por API
--   Envía eventos por **webhook**
--   Notifica mensajes entrantes, salientes y actualizaciones de estado por websocket
--   Está construido con una arquitectura tipo **MVC**.
+El sistema se conecta a un proveedor externo de mensajería que:
+
+- Permite enviar mensajes por API
+- Envía eventos por **webhook**
+- Notifica mensajes entrantes, salientes y actualizaciones de estado
 
 ------------------------------------------------------------------------
 
@@ -14,53 +14,117 @@ conectada a un proveedor externo que:
 
 ### Backend
 
--   Node.js
--   Express v5
--   Prisma ORM
--   MySQL
+- Node.js + Express v5
+- Prisma ORM + MySQL
+- Socket.IO v4 (tiempo real)
+- JWT (autenticación, 24 h)
+- `crypto.scrypt` (hash de contraseñas)
+- Multer (subida de avatares)
+- Express Rate Limit
 
 ### Frontend
 
--   Vite + Vue 3
--   Pinia (gestión de estado)
--   Tailwind CSS
--   Socket.IO client
-
-### Autenticación
-
--   JWT (24h)
-
-### Seguridad
-
--   Hash de contraseñas con `crypto.scrypt`
--   Webhook protegido con header secreto
-
-### Tiempo real
-
--   Socket.IO v4
-
-### Testing
-
--   Postman (colección incluida en /postman/collections)
-
-### Exposición pública local
-
--   Cloudflare Tunnel
+- Vite + Vue 3 (Composition API + `<script setup>`)
+- Pinia (estado global)
+- Tailwind CSS (diseño responsive: móvil, tablet y desktop)
+- Socket.IO client
+- Vue Router (guards por rol)
 
 ------------------------------------------------------------------------
 
-## Coleccion Postman
+## Funcionalidades del frontend
 
-En la raiz del proyecto encontraras el archivo `PowerChat.postman_collection.json`
-con todas las peticiones de la API listas para importar en Postman.
+### Autenticación
+
+- Login con email y contraseña
+- Token JWT almacenado en `localStorage`
+- Guards de ruta por autenticación y rol (`ADMIN`, `SUPERVISOR`, `AGENT`)
+- Logout con limpieza completa de estado y redirección
+
+### Bandeja de conversaciones
+
+- Lista de conversaciones con último mensaje, hora y estado de lectura
+- Filtros por **alcance** (todas / mías / sin asignar) y **estado** (abierta / pendiente / cerrada)
+- Paginación con "cargar más"
+- Indicador de no leído
+- Búsqueda en tiempo real vía Socket.IO
+
+### Vista de chat
+
+- Hilo de mensajes con separadores de fecha
+- Burbujas de mensaje diferenciadas por dirección (entrante / saliente)
+- Iconos de estado de mensaje estilo WhatsApp: reloj (PENDING), ✓ gris (SENT), ✓✓ gris (RECEIVED), ✓✓ azul (READ), ✗ rojo (ERROR)
+- Carga de mensajes anteriores (paginación por cursor)
+- Scroll automático al recibir mensajes nuevos
+- Input de texto con autoexpansión y envío por Enter
+
+### Cabecera de conversación
+
+- Nombre del contacto editable en línea
+- Asignación de agente con dropdown (carga usuarios desde API)
+- Cambio de estado de conversación (Abierta / Pendiente / Cerrada)
+- Badge de estado del contacto
+
+### Gestión de usuarios *(solo ADMIN)*
+
+- Tabla de usuarios con avatar, nombre, email, rol y estado
+- Crear y editar usuarios con modal de formulario
+- Desactivación lógica (los usuarios no se eliminan físicamente)
+
+### Perfil de usuario
+
+- Vista con datos del usuario autenticado
+- Subida de avatar (JPG, PNG o WebP, máx. 2 MB) con previsualización inmediata
+- Toggle de modo oscuro / claro persistente
+- Botón de cerrar sesión
+
+### Tiempo real (Socket.IO)
+
+- Conexión autenticada con JWT
+- Rooms automáticas: `user:{id}`, `role:{ROLE}`
+- Room manual de conversación (`conversation:join` / `conversation:leave`)
+- Eventos recibidos: `message:new`, `message:update`, `conversation:assign`, `conversation:statusUpdate`
+- La lista de conversaciones se actualiza automáticamente según filtros activos
+
+------------------------------------------------------------------------
+
+## Diseño responsive
+
+La interfaz se adapta a tres tamaños de pantalla:
+
+### Desktop (≥ 1024 px)
+
+- Sidebar de navegación fijo a la izquierda (56 px)
+- Panel de conversaciones (340 px) + panel de chat ocupando el resto
+- Cabecera del chat con botones de asignar y cambiar estado visibles directamente
+
+### Tablet (768 px – 1023 px)
+
+- Mismo layout de dos columnas que desktop
+- Cabecera del chat con menú hamburguesa (☰) que agrupa asignar y estado en un panel desplegable combinado
+
+### Móvil (< 768 px)
+
+- Barra de navegación fija en la parte inferior con columnas iguales (2 para agente/supervisor, 3 para admin)
+- Vista de un panel a la vez: lista de conversaciones **o** chat (al seleccionar una conversación)
+- Botón ← en la cabecera del chat para volver a la lista
+- Menú hamburguesa (☰) en la cabecera del chat para asignar y cambiar estado
+- El área de mensajes queda siempre encuadrada entre la cabecera del contacto y el input, sin scroll de página
+- El cierre de sesión está disponible en la vista de perfil (/me)
+
+------------------------------------------------------------------------
+
+## Colección Postman
+
+En `postman/` encontrarás el archivo `PowerChat.postman_collection.json` con todas las peticiones listas para importar.
 
 Incluye:
 
--   Auth (login con guardado automatico del token)
--   Me (perfil propio, subida de avatar)
--   Conversaciones (listar, ver, asignar, mensajes, estado, leer, contacto)
--   Usuarios (CRUD completo, requiere rol ADMIN)
--   Webhooks (simulacion de eventos del proveedor)
+- Auth (login con guardado automático del token)
+- Me (perfil propio, subida de avatar)
+- Conversaciones (listar, ver, asignar, mensajes, estado, leer, contacto)
+- Usuarios (CRUD completo, requiere rol ADMIN)
+- Webhooks (simulación de eventos del proveedor)
 
 Para importarla: abre Postman → **Import** → selecciona el archivo.
 
@@ -68,35 +132,35 @@ Para importarla: abre Postman → **Import** → selecciona el archivo.
 
 # 1. Requisitos previos
 
-Tener instalado:
-
--   Node.js
--   npm
--   MySQL
--   Git
--   Cloudflared
--   Postman
+- Node.js
+- npm
+- MySQL
+- Git
+- Cloudflared (para exponer el webhook localmente)
+- Postman (opcional, para probar la API)
 
 ------------------------------------------------------------------------
 
-# 2. Instalación del proyecto
+# 2. Instalación
 
-## Clonar repositorio
+## Clonar el repositorio
 
-``` bash
+```bash
 git clone <URL_DEL_REPO>
 cd ProyectoDAW
 ```
 
-## Entrar al backend
+## Backend
 
-``` bash
+```bash
 cd backend
+npm install
 ```
 
-## Instalar dependencias
+## Frontend
 
-``` bash
+```bash
+cd frontend
 npm install
 ```
 
@@ -104,24 +168,25 @@ npm install
 
 # 3. Variables de entorno
 
-Crear un archivo `.env` dentro de `backend/`.
+## Backend — `backend/.env`
 
-Ejemplo:
+```
+PORT=3000
+DATABASE_URL="mysql://root:root@localhost:3306/proyectodaw"
+JWT_ACCESS_SECRET=pon_aqui_un_secreto_largo
+WEBHOOK_SECRET=pon_aqui_un_secreto_fijo_para_el_webhook
+MESSAGE_API_BASE_URL=https://tu.proveedor.com
+MESSAGE_API_USERNAME=usuario_del_proveedor
+MESSAGE_API_PASSWORD=password_del_proveedor
+MESSAGE_API_FROM=+34600000000
+CORS_ORIGIN=http://localhost:5173
+```
 
-    PORT=3000
+## Frontend — `frontend/.env`
 
-    DATABASE_URL="mysql://root:root@localhost:3306/proyectodaw"
-
-    JWT_ACCESS_SECRET=pon_aqui_un_secreto_largo
-
-    WEBHOOK_SECRET=pon_aqui_un_secreto_fijo_para_el_webhook
-
-    MESSAGE_API_BASE_URL=https://message.testmotorflash.com
-    MESSAGE_API_USERNAME=usuario_del_proveedor
-    MESSAGE_API_PASSWORD=password_del_proveedor
-    MESSAGE_API_FROM=+34615661316
-
-    CORS_ORIGIN=http://localhost:5173
+```
+VITE_API_URL=http://localhost:3000
+```
 
 ------------------------------------------------------------------------
 
@@ -129,7 +194,7 @@ Ejemplo:
 
 Crear la base de datos en MySQL:
 
-``` sql
+```sql
 CREATE DATABASE proyectodaw
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
@@ -141,13 +206,14 @@ COLLATE utf8mb4_unicode_ci;
 
 ## Generar Prisma Client
 
-``` bash
+```bash
+cd backend
 npx prisma generate --schema=prisma/schema.prisma
 ```
 
 ## Ejecutar migraciones
 
-``` bash
+```bash
 npx prisma migrate dev --name init --schema=prisma/schema.prisma
 ```
 
@@ -155,23 +221,25 @@ npx prisma migrate dev --name init --schema=prisma/schema.prisma
 
 El seed crea el usuario inicial necesario para hacer login:
 
-    Email:    user@gmail.com
-    Password: user1234
-    Rol:      ADMIN
+```
+Email:    user@gmail.com
+Password: user1234
+Rol:      ADMIN
+```
 
-**En desarrollo** (`migrate dev`), el seed se ejecuta automáticamente al final de las migraciones. No hace falta lanzarlo a mano.
+**En desarrollo** (`migrate dev`): el seed se ejecuta automáticamente al final de las migraciones.
 
-**En producción** (`migrate deploy`), el seed NO se ejecuta automáticamente. Hay que lanzarlo una vez de forma manual:
+**En producción** (`migrate deploy`): lanzarlo una vez de forma manual:
 
-``` bash
+```bash
 npx prisma db seed
 ```
 
 El seed es idempotente: si el usuario ya existe no se duplica.
 
-## Abrir Prisma Studio
+## Prisma Studio
 
-``` bash
+```bash
 npx prisma studio --schema=prisma/schema.prisma
 ```
 
@@ -181,328 +249,326 @@ npx prisma studio --schema=prisma/schema.prisma
 
 ## Backend
 
-Desde `backend/`:
-
-``` bash
+```bash
+cd backend
 npm run dev
 ```
 
-Servidor disponible en:
-
-    http://localhost:3000
-
-Ruta de prueba:
-
-    http://localhost:3000/health
+Disponible en `http://localhost:3000`
+Ruta de prueba: `http://localhost:3000/health`
 
 ## Frontend
 
-Desde `frontend/`:
-
-``` bash
-npm install
+```bash
+cd frontend
 npm run dev
 ```
 
-Aplicación disponible en:
-
-    http://localhost:5173
+Disponible en `http://localhost:5173`
 
 ------------------------------------------------------------------------
 
 # 7. Estructura del proyecto
 
-    backend/
-     ├─ prisma/
-     │   ├─ schema.prisma
-     │   └─ migrations/
-     │
-     ├─ src/
-     │   ├─ controllers/
-     │   ├─ routes/
-     │   ├─ middleware/
-     │   ├─ services/
-     │   ├─ prisma/
-     │   │   └─ client.js
-     │   ├─ socket.js
-     │   └─ server.js
-     │
-     ├─ .env
-     └─ package.json
-
-    frontend/
-     ├─ src/
-     │   ├─ api/
-     │   ├─ components/
-     │   ├─ router/
-     │   ├─ socket/
-     │   ├─ stores/
-     │   ├─ views/
-     │   ├─ App.vue
-     │   └─ main.js
-     │
-     ├─ index.html
-     ├─ vite.config.js
-     └─ package.json
+```
+ProyectoDAW/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   ├── seed.js
+│   │   └── migrations/
+│   ├── src/
+│   │   ├── controllers/
+│   │   ├── routes/
+│   │   ├── middleware/
+│   │   ├── services/
+│   │   ├── prisma/
+│   │   │   └── client.js
+│   │   ├── socket.js
+│   │   └── server.js
+│   ├── .env
+│   └── package.json
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.js
+│   │   ├── components/
+│   │   │   ├── conversations/
+│   │   │   │   ├── ConversationList.vue
+│   │   │   │   ├── ConversationItem.vue
+│   │   │   │   └── ConversationFilters.vue
+│   │   │   ├── layout/
+│   │   │   │   └── AppNavbar.vue
+│   │   │   ├── messages/
+│   │   │   │   ├── MessageThread.vue
+│   │   │   │   ├── ConversationHeader.vue
+│   │   │   │   ├── MessageBubble.vue
+│   │   │   │   └── MessageInput.vue
+│   │   │   └── users/
+│   │   │       ├── UserTable.vue
+│   │   │       └── UserFormModal.vue
+│   │   ├── router/
+│   │   │   └── index.js
+│   │   ├── socket/
+│   │   │   └── index.js
+│   │   ├── stores/
+│   │   │   ├── auth.js
+│   │   │   ├── conversations.js
+│   │   │   └── theme.js
+│   │   ├── views/
+│   │   │   ├── LoginView.vue
+│   │   │   ├── MainView.vue
+│   │   │   ├── UsersView.vue
+│   │   │   └── ProfileView.vue
+│   │   ├── App.vue
+│   │   └── main.js
+│   ├── .env
+│   ├── index.html
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   └── package.json
+│
+└── postman/
+```
 
 ------------------------------------------------------------------------
 
-# 8. Funcionalidades implementadas
+# 8. API REST — endpoints
 
 ## Auth
 
--   `POST /auth/login`
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `POST` | `/auth/login` | Público (rate limit 3/15 s) |
 
-## Me
+## Perfil propio
 
--   `GET /me`
--   `POST /me/avatar`
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/me` | JWT |
+| `POST` | `/me/avatar` | JWT |
 
 ## Conversaciones
 
--   `GET /conversations`
--   `GET /conversations/:id`
--   `POST /conversations/:id/assign-to-me`
--   `POST /conversations/:id/assign`
--   `POST /conversations/:id/unassign`
--   `PATCH /conversations/:id/status`
--   `POST /conversations/:id/read`
--   `PATCH /conversations/:id/contact`
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/conversations` | JWT + RBAC |
+| `GET` | `/conversations/:id` | JWT + RBAC |
+| `POST` | `/conversations/:id/assign-to-me` | JWT (AGENT) |
+| `POST` | `/conversations/:id/assign` | JWT (SUPERVISOR / ADMIN) |
+| `POST` | `/conversations/:id/unassign` | JWT |
+| `PATCH` | `/conversations/:id/status` | JWT |
+| `POST` | `/conversations/:id/read` | JWT |
+| `PATCH` | `/conversations/:id/contact` | JWT |
 
 ## Mensajes
 
--   `GET /conversations/:id/messages`
--   `POST /conversations/:id/messages`
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/conversations/:id/messages` | JWT |
+| `POST` | `/conversations/:id/messages` | JWT |
 
-## Usuarios (requiere rol ADMIN)
+## Usuarios
 
--   `GET /users`
--   `POST /users`
--   `PATCH /users/:id`
--   `DELETE /users/:id`
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/users` | JWT + ADMIN |
+| `POST` | `/users` | JWT + ADMIN |
+| `PATCH` | `/users/:id` | JWT + ADMIN |
+| `DELETE` | `/users/:id` | JWT + ADMIN |
 
 ## Webhook
 
--   `POST /webhooks/provider`
-
-## Tiempo real
-
--   Socket.IO con autenticación por JWT
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `POST` | `/webhooks/provider` | `X-Webhook-Secret` |
 
 ------------------------------------------------------------------------
 
-# 9. Modelos principales
+# 9. WebSockets
+
+Conexión autenticada con JWT. Al conectar se asignan automáticamente las rooms:
+
+- `user:{id}` — notificaciones del usuario concreto
+- `role:{AGENT|SUPERVISOR|ADMIN}` — notificaciones por rol
+
+El cliente puede unirse a una room de conversación emitiendo `conversation:join`.
+
+**Eventos servidor → cliente:**
+
+| Evento | Cuándo se emite |
+|--------|----------------|
+| `message:new` | Nuevo mensaje en una conversación |
+| `message:update` | Actualización de estado de un mensaje |
+| `conversation:assign` | Cambio de asignación |
+| `conversation:statusUpdate` | Cambio de estado de la conversación |
+
+------------------------------------------------------------------------
+
+# 10. Modelos de base de datos
 
 ## User
 
--   id
--   email
--   password
--   role (`ADMIN` / `SUPERVISOR` / `AGENT`)
--   firstName
--   lastName
--   avatarUrl
--   active
--   createdAt
--   updatedAt
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | Int | PK |
+| `email` | String | Único |
+| `password` | String | Hash scrypt |
+| `role` | Enum | `ADMIN` / `SUPERVISOR` / `AGENT` |
+| `firstName` | String | |
+| `lastName` | String | |
+| `avatarUrl` | String? | |
+| `active` | Boolean | Baja lógica |
 
 ## Conversation
 
--   id
--   externalId
--   customerPhone
--   contactName
--   status (`OPEN` / `PENDING` / `CLOSED`)
--   assignedToId
--   lastMessageAt
--   lastMessageText
--   createdAt
--   updatedAt
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | Int | PK |
+| `externalId` | String | ID del proveedor |
+| `customerPhone` | String | |
+| `contactName` | String? | Editable desde el frontend |
+| `status` | Enum | `OPEN` / `PENDING` / `CLOSED` |
+| `assignedToId` | Int? | FK → User |
 
 ## Message
 
--   id
--   externalId
--   direction (`IN` / `OUT`)
--   state (`PENDING` / `SENT` / `RECEIVED` / `READ` / `ERROR` / `DELETED`)
--   text
--   occurredAt
--   stateAt
--   conversationId
--   sentById
--   createdAt
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | Int | PK |
+| `direction` | Enum | `IN` / `OUT` |
+| `state` | Enum | `PENDING` / `SENT` / `RECEIVED` / `READ` / `ERROR` / `DELETED` |
+| `text` | String | |
+| `conversationId` | Int | FK → Conversation |
+| `sentById` | Int? | FK → User |
 
 ## ConversationUserState
 
--   id
--   conversationId
--   userId
--   lastReadAt
+Rastrea `lastReadAt` por usuario y conversación, para calcular mensajes no leídos.
 
 ------------------------------------------------------------------------
 
-# 10. Dependencias
+# 11. Seguridad
 
-## Backend
-
-| Paquete | Por qué se usa |
-|---------|---------------|
-| `express` | Framework HTTP para definir rutas, middlewares y controladores (MVC) |
-| `@prisma/client` | Cliente ORM para interactuar con MySQL de forma tipada y segura |
-| `jsonwebtoken` | Generación y verificación de tokens JWT para autenticación |
-| `socket.io` | Comunicación bidireccional en tiempo real (mensajes entrantes, estados) |
-| `cors` | Permite peticiones desde el frontend en `localhost:5173` |
-| `dotenv` | Carga las variables de entorno desde el archivo `.env` |
-| `express-rate-limit` | Limita intentos de login (3 por cada 15s) para evitar fuerza bruta |
-| `multer` | Gestiona la subida de archivos (avatares de usuario) |
-
-### DevDependencies (backend)
-
-| Paquete | Por qué se usa |
-|---------|---------------|
-| `nodemon` | Reinicia el servidor automáticamente al guardar cambios durante el desarrollo |
-| `prisma` | CLI para gestionar el schema, migraciones y seed de la base de datos |
-
-## Frontend
-
-| Paquete | Por qué se usa |
-|---------|---------------|
-| `vue` | Framework reactivo para construir la interfaz de usuario (SPA) |
-| `vue-router` | Gestiona la navegación entre vistas (login, bandeja, perfil, usuarios) |
-| `pinia` | Store de estado global (auth, conversaciones, tema) |
-| `axios` | Cliente HTTP para llamar a la API REST del backend |
-| `socket.io-client` | Conecta el frontend al servidor Socket.IO para recibir eventos en tiempo real |
-
-### DevDependencies (frontend)
-
-| Paquete | Por qué se usa |
-|---------|---------------|
-| `vite` | Bundler ultrarrápido que sirve el frontend en desarrollo |
-| `@vitejs/plugin-vue` | Plugin de Vite para procesar componentes `.vue` |
-| `tailwindcss` | Framework CSS de utilidades para estilizar los componentes |
-| `postcss` + `autoprefixer` | Procesado de CSS necesario para que Tailwind funcione correctamente |
+- Contraseñas hasheadas con `crypto.scrypt` + comparación en tiempo constante (`timingSafeEqual`)
+- Webhook autenticado con `X-Webhook-Secret` comparado en tiempo constante
+- JWT validado con algoritmo explícito (`HS256`)
+- RBAC en todos los endpoints protegidos
+- Rate limit en `/auth/login` (3 intentos / 15 s)
+- CORS restringido al origen configurado en `CORS_ORIGIN`
 
 ------------------------------------------------------------------------
 
-# 11. Webhook del proveedor
+# 12. Webhook del proveedor
 
-Endpoint:
-
-    POST /webhooks/provider
+```
+POST /webhooks/provider
+X-Webhook-Secret: TU_SECRETO
+```
 
 Eventos soportados:
 
--   `message.incomming`
--   `message.outgoing`
--   `message.state_updated`
+- `message.incomming` — mensaje entrante
+- `message.outgoing` — mensaje saliente
+- `message.state_updated` — actualización de estado
 
-------------------------------------------------------------------------
-
-# 12. Seguridad del webhook
-
-Header requerido:
-
-    X-Webhook-Secret: TU_SECRETO
-
-Variable de entorno:
-
-    WEBHOOK_SECRET=tu_secreto
+El webhook responde `200` inmediatamente y procesa el evento en `setImmediate()`.
 
 ------------------------------------------------------------------------
 
 # 13. Exponer el webhook con Cloudflare Tunnel
 
-## Login
-
-``` bash
+```bash
+# Login
 cloudflared tunnel login
-```
 
-## Crear túnel
-
-``` bash
+# Crear túnel
 cloudflared tunnel create powerchat-webhook
-```
 
-## Asociar DNS
-
-``` bash
+# Asociar dominio
 cloudflared tunnel route dns powerchat-webhook webhook.tudominio.com
-```
 
-## Ejecutar túnel
-
-``` bash
+# Ejecutar
 cloudflared tunnel run powerchat-webhook
 ```
 
-------------------------------------------------------------------------
+URL a configurar en el proveedor:
 
-# 14. Configuración del proveedor
-
-Si quieres probar el envío de mensajes ahy que configurarlo en el proveedor. (Avisame por correo con estas credenciales para configurarlas, no funciona con localhost)
-
-Webhook URL:
-
-    https://webhook.tudominio.com/webhooks/provider
-
-Header requerido:
-
-    X-Webhook-Secret: TU_SECRETO
+```
+https://webhook.tudominio.com/webhooks/provider
+```
 
 ------------------------------------------------------------------------
 
-# 15. Comandos útiles
+# 14. Dependencias
 
-Arrancar backend:
+## Backend
 
-``` bash
+| Paquete | Por qué se usa |
+|---------|----------------|
+| `express` | Framework HTTP (rutas, middlewares, controladores) |
+| `@prisma/client` | ORM para MySQL |
+| `jsonwebtoken` | Generación y verificación de JWT |
+| `socket.io` | Comunicación en tiempo real |
+| `cors` | Permite peticiones desde el frontend |
+| `dotenv` | Variables de entorno |
+| `express-rate-limit` | Limita intentos de login |
+| `multer` | Subida de archivos (avatares) |
+| `nodemon` *(dev)* | Reinicio automático en desarrollo |
+| `prisma` *(dev)* | CLI para schema, migraciones y seed |
+
+## Frontend
+
+| Paquete | Por qué se usa |
+|---------|----------------|
+| `vue` | Framework reactivo (SPA) |
+| `vue-router` | Navegación entre vistas con guards por rol |
+| `pinia` | Estado global (auth, conversaciones, tema) |
+| `axios` | Cliente HTTP para la API REST |
+| `socket.io-client` | Eventos en tiempo real |
+| `vite` *(dev)* | Bundler para desarrollo |
+| `@vitejs/plugin-vue` *(dev)* | Procesado de componentes `.vue` |
+| `tailwindcss` *(dev)* | Estilos responsive |
+| `postcss` + `autoprefixer` *(dev)* | Procesado de CSS |
+
+------------------------------------------------------------------------
+
+# 15. Flujo de mensajes
+
+**Mensaje entrante:**
+```
+Cliente WhatsApp → Proveedor → Webhook → BD → Socket.IO → Frontend
+```
+
+**Mensaje saliente:**
+```
+Frontend → API → Proveedor → Webhook → BD → Socket.IO → Frontend
+```
+
+------------------------------------------------------------------------
+
+# 16. Comandos de referencia rápida
+
+```bash
+# Arrancar backend (desde backend/)
 npm run dev
-```
 
-Generar Prisma Client:
+# Arrancar frontend (desde frontend/)
+npm run dev
 
-``` bash
+# Generar Prisma Client
 npx prisma generate
-```
 
-Migraciones:
-
-``` bash
+# Migraciones
 npx prisma migrate dev
-```
 
-Prisma Studio:
+# Seed manual (producción)
+npx prisma db seed
 
-``` bash
+# Prisma Studio
 npx prisma studio
-```
 
-Arrancar Cloudflare Tunnel:
-
-``` bash
+# Cloudflare Tunnel
 cloudflared tunnel run powerchat-webhook
 ```
-
-------------------------------------------------------------------------
-
-# 16. Flujo de funcionamiento
-
-### Mensaje entrante
-
-Cliente → Proveedor → Webhook → Base de datos → Socket.IO → Frontend
-
-### Mensaje saliente
-
-Frontend → API → Proveedor → Webhook → Base de datos → Socket.IO →
-Frontend
-
-------------------------------------------------------------------------
-
-# 17. En proceso / mejoras
-
--   Refresh tokens
--   Frontend SPA completo
--   Métricas de conversación
--   Dashboard de supervisión
--   Despliegue en producción
