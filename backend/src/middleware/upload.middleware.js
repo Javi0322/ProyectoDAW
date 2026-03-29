@@ -10,7 +10,7 @@ const MIME_TO_EXT = {
   'image/webp': '.webp',
 }
 
-const dest = path.join(__dirname, '..', '..', '..', 'frontend', 'public', 'avatars')
+const dest = path.join(__dirname, '..', '..', 'uploads', 'avatars')
 fs.mkdirSync(dest, { recursive: true })
 
 const storage = multer.diskStorage({

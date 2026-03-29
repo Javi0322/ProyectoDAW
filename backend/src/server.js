@@ -13,8 +13,11 @@ const { setSocketServer } = require("./socket");
 const jwt = require("jsonwebtoken");
 const { prisma } = require("./prisma/client");
 
+const path = require("path");
+
 const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use("/avatars", express.static(path.join(__dirname, "..", "uploads", "avatars")));
 const jsonStrict = express.json({ limit: '64kb' });
 const jsonWebhook = express.json({ limit: '1mb' });
 

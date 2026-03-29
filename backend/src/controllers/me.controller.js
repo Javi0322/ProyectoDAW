@@ -37,7 +37,7 @@ async function uploadAvatarController(req, res) {
     return res.status(400).json({ ok: false, error: 'no_file_uploaded' })
   }
 
-  const avatarUrl = `${process.env.CORS_ORIGIN}/avatars/${req.file.filename}`
+  const avatarUrl = `${process.env.BACKEND_URL}/avatars/${req.file.filename}`
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -45,7 +45,7 @@ async function uploadAvatarController(req, res) {
   })
 
   if (user && user.avatarUrl) {
-    const oldPath = user.avatarUrl.replace(process.env.CORS_ORIGIN, '')
+    const oldPath = user.avatarUrl.replace(process.env.BACKEND_URL, '')
     const oldBase = path.basename(oldPath)
     const resolved = path.resolve(dest, oldBase)
     if (resolved.startsWith(path.resolve(dest) + path.sep)) {
