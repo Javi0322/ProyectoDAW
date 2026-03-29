@@ -11,7 +11,7 @@ const pinia = createPinia()
 app.use(pinia)
 
 const authStore = useAuthStore(pinia)
-await authStore.loadFromStorage()
-
-app.use(router)
-app.mount('#app')
+authStore.loadFromStorage().then(() => {
+  app.use(router)
+  app.mount('#app')
+})
