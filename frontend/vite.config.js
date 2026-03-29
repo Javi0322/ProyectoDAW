@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   build: {
     sourcemap: false,
+    target: 'esnext',
   },
   resolve: {
     alias: {
