@@ -18,7 +18,6 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = accessToken
     user.value = userData
     localStorage.setItem('auth_token', accessToken)
-    localStorage.setItem('auth_user', JSON.stringify(userData))
     return userData
   }
 
@@ -26,7 +25,6 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     user.value = null
     localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_user')
     disconnectSocket()
     // Reset the conversations store without importing its module (avoids circular dependency).
     // getActivePinia gives access to any registered store by id at runtime.
@@ -48,12 +46,10 @@ export const useAuthStore = defineStore('auth', () => {
     const { default: api } = await import('@/api/axios.js')
     const res = await api.get('/me')
     user.value = res.data.user
-    localStorage.setItem('auth_user', JSON.stringify(res.data.user))
   }
 
   function setAvatarUrl(url) {
     user.value = { ...user.value, avatarUrl: url }
-    localStorage.setItem('auth_user', JSON.stringify(user.value))
   }
 
   return {

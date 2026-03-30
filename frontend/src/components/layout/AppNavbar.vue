@@ -12,6 +12,17 @@
     </RouterLink>
 
     <RouterLink
+      v-if="authStore.isAdmin || authStore.isSupervisor"
+      to="/dashboard"
+      class="flex-1 flex items-center justify-center h-full transition-colors"
+      :class="$route.path === '/dashboard' ? 'text-brand-accent' : 'text-zinc-400 dark:text-zinc-500'"
+    >
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    </RouterLink>
+
+    <RouterLink
       v-if="authStore.isAdmin"
       to="/users"
       class="flex-1 flex items-center justify-center h-full transition-colors"
@@ -62,6 +73,21 @@
         </svg>
         <span class="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md bg-zinc-900 dark:bg-zinc-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
           Bandeja
+        </span>
+      </RouterLink>
+
+      <RouterLink
+        v-if="authStore.isAdmin || authStore.isSupervisor"
+        to="/dashboard"
+        class="group relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+        :class="$route.path === '/dashboard' ? 'bg-brand-accent/10 text-brand-accent' : 'text-zinc-500 dark:text-zinc-400'"
+        title="Dashboard"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+        <span class="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md bg-zinc-900 dark:bg-zinc-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          Dashboard
         </span>
       </RouterLink>
 

@@ -7,6 +7,7 @@ const meRoutes = require("./routes/me.routes");
 const webhooksRoutes = require("./routes/webhooks.routes");
 const conversationsRoutes = require("./routes/conversations.routes");
 const usersRoutes = require("./routes/users.routes");
+const statsRoutes = require("./routes/stats.routes");
 const http = require("http");
 const { Server } = require("socket.io");
 const { setSocketServer } = require("./socket");
@@ -26,6 +27,7 @@ app.use("/me", jsonStrict, meRoutes);
 app.use("/webhooks", jsonWebhook, webhooksRoutes);
 app.use("/conversations", jsonStrict, conversationsRoutes);
 app.use("/users", jsonStrict, usersRoutes);
+app.use("/stats", jsonStrict, statsRoutes);
 
 
 // Ruta de prueba

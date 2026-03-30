@@ -1,27 +1,27 @@
 <template>
-  <div class="card overflow-hidden">
+  <div class="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden">
     <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
-        <tr class="border-b border-zinc-200 dark:border-zinc-800">
-          <th class="text-left px-5 py-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+        <tr class="border-b border-zinc-100 dark:border-zinc-800">
+          <th class="text-left px-5 py-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">
             Usuario
           </th>
-          <th class="text-left px-5 py-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <th class="text-left px-5 py-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">
             Email
           </th>
-          <th class="text-left px-5 py-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <th class="text-left px-5 py-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">
             Rol
           </th>
-          <th class="text-left px-5 py-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <th class="text-left px-5 py-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">
             Estado
           </th>
-          <th class="text-right px-5 py-3 text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <th class="text-right px-5 py-3 text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest font-mono">
             Acciones
           </th>
         </tr>
       </thead>
-      <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800/80">
+      <tbody class="divide-y divide-zinc-50 dark:divide-zinc-800">
         <!-- Loading rows -->
         <tr v-if="loading" v-for="i in 5" :key="i">
           <td class="px-5 py-3" colspan="5">
@@ -54,11 +54,14 @@
               <div
                 v-else
                 class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                :class="user.active ? 'bg-brand-accent/20 text-brand-accent' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-500'"
+                :style="user.active ? `background:${colorFromId(user.id)}` : ''"
+                :class="!user.active ? 'bg-zinc-200 dark:bg-zinc-700' : ''"
               >
-                <span class="text-xs font-bold">{{ user.firstName?.charAt(0).toUpperCase() ?? '?' }}</span>
+                <span class="text-xs font-bold" :class="user.active ? 'text-white' : 'text-zinc-500'">
+                  {{ initials(user) }}
+                </span>
               </div>
-              <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ user.firstName }} {{ user.lastName }}</span>
+              <span class="font-medium text-zinc-700 dark:text-zinc-200">{{ user.firstName }} {{ user.lastName }}</span>
             </div>
           </td>
           <td class="px-5 py-3.5 text-zinc-500 dark:text-zinc-400 font-mono text-xs">
@@ -130,13 +133,18 @@ defineProps({
 const emit = defineEmits(['edit', 'deactivate'])
 
 function roleBadge(role) {
-  switch (role) {
-    case 'ADMIN':
-      return 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-    case 'SUPERVISOR':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-    default:
-      return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-  }
+  if (role === 'ADMIN')      return 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400'
+  if (role === 'SUPERVISOR') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'
+  return 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
+}
+
+function colorFromId(id) {
+  const palette = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444']
+  return palette[Number(id ?? 0) % palette.length]
+}
+
+function initials(user) {
+  const full = [user.firstName, user.lastName].filter(Boolean).join(' ')
+  return full ? full.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?'
 }
 </script>

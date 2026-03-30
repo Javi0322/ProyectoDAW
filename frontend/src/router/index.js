@@ -27,6 +27,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: () => import('@/views/DashboardView.vue'),
+    meta: { requiresAuth: true, requiresRole: ['SUPERVISOR', 'ADMIN'] },
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/',
   },
@@ -48,8 +54,12 @@ router.beforeEach((to, from, next) => {
     return next('/login')
   }
 
-  if (to.meta.requiresRole && authStore.user?.role !== to.meta.requiresRole) {
-    return next('/')
+  const required = to.meta.requiresRole
+  if (required) {
+    const roles = Array.isArray(required) ? required : [required]
+    if (!roles.includes(authStore.user?.role)) {
+      return next('/')
+    }
   }
 
   next()

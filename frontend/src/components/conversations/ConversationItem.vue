@@ -112,7 +112,7 @@ const formattedTime = computed(() => {
   } else if (diffDays < 7) {
     return date.toLocaleDateString('es-ES', { weekday: 'short' })
   } else {
-    return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
+    return `${String(date.getDate()).padStart(2,'0')}-${String(date.getMonth()+1).padStart(2,'0')}-${date.getFullYear()}`
   }
 })
 

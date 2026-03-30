@@ -1,16 +1,21 @@
 <template>
-  <div class="min-h-screen bg-zinc-50 dark:bg-brand-primary md:pl-14 pb-14 md:pb-0">
+  <div class="min-h-screen bg-zinc-50 dark:bg-zinc-950 md:pl-14 pb-14 md:pb-0">
     <AppNavbar />
 
     <main class="max-w-6xl w-full mx-auto px-4 md:px-6 py-8">
       <!-- Page header -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-0 mb-8">
-        <div>
-          <h1 class="font-display font-bold text-2xl text-zinc-900 dark:text-zinc-100">
-            Gestión de usuarios
-          </h1>
-          <p class="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-            {{ users.length }} usuario{{ users.length !== 1 ? 's' : '' }} en total
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-0 mb-8">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <h1 class="text-2xl font-black tracking-tight text-zinc-900 dark:text-white" style="font-family: 'DM Sans', 'Sora', sans-serif;">
+              Gestión de usuarios
+            </h1>
+          </div>
+          <p class="text-sm text-zinc-400 dark:text-zinc-500 font-mono">
+            {{ users.length }} usuario{{ users.length !== 1 ? 's' : '' }} registrado{{ users.length !== 1 ? 's' : '' }}
           </p>
         </div>
         <button class="btn-primary" @click="openCreate">

@@ -92,7 +92,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useConversationsStore } from '@/stores/conversations.js'
 import ConversationHeader from './ConversationHeader.vue'
 import MessageBubble from './MessageBubble.vue'
@@ -105,6 +105,10 @@ const bottomRef = ref(null)
 const loadingMore = ref(false)
 
 const conv = computed(() => convStore.activeConversation)
+
+onMounted(() => {
+  if (convStore.messages.length > 0) scrollToBottom('instant')
+})
 
 function scrollToBottom(behavior = 'smooth') {
   nextTick(() => {
@@ -125,8 +129,8 @@ watch(
   () => convStore.messages.length,
   (newLen, oldLen) => {
     if (newLen > oldLen) {
-      const isAtBottom = isNearBottom()
-      if (isAtBottom) scrollToBottom()
+      if (oldLen === 0) scrollToBottom('instant')
+      else if (isNearBottom()) scrollToBottom()
     }
   }
 )
@@ -169,6 +173,6 @@ function formatDate(dateStr) {
   const diffDays = Math.floor((now - date) / 86400000)
   if (diffDays === 0) return 'Hoy'
   if (diffDays === 1) return 'Ayer'
-  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+  return `${String(date.getDate()).padStart(2,'0')}-${String(date.getMonth()+1).padStart(2,'0')}-${date.getFullYear()}`
 }
 </script>

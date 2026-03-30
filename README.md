@@ -65,6 +65,17 @@ El sistema se conecta a un proveedor externo de mensajería que:
 - Cambio de estado de conversación (Abierta / Pendiente / Cerrada)
 - Badge de estado del contacto
 
+### Dashboard de métricas *(SUPERVISOR y ADMIN)*
+
+- KPIs en tiempo real agrupados en cuatro secciones: **Por asignación**, **Por estado**, **Por día** y **Por usuario**
+- Filtro de rango de fechas con presets rápidos (hoy, 7 d, 30 d) y selector personalizado
+- Polling automático cada 60 segundos (sin WebSocket)
+- Gráfico donut de conversaciones por estado (OPEN / PENDING / CLOSED)
+- Gráficos de líneas: conversaciones nuevas por día y mensajes por día (IN/OUT)
+- Tabla de rendimiento por usuario: conversaciones abiertas, pendientes, resueltas y mensajes enviados en el período
+- Fila virtual "Sin asignar" para conversaciones sin agente
+- Panel lateral de drill-down: al clicar en un usuario se listan las conversaciones en las que ha interactuado; botón "Abrir →" navega al chat con scroll automático al mensaje más reciente
+
 ### Gestión de usuarios *(solo ADMIN)*
 
 - Tabla de usuarios con avatar, nombre, email, rol y estado
@@ -279,7 +290,9 @@ ProyectoDAW/
 │   │   └── migrations/
 │   ├── src/
 │   │   ├── controllers/
+│   │   │   └── stats.controller.js
 │   │   ├── routes/
+│   │   │   └── stats.routes.js
 │   │   ├── middleware/
 │   │   ├── services/
 │   │   ├── prisma/
@@ -305,6 +318,10 @@ ProyectoDAW/
 │   │   │   │   ├── ConversationHeader.vue
 │   │   │   │   ├── MessageBubble.vue
 │   │   │   │   └── MessageInput.vue
+│   │   │   ├── dashboard/
+│   │   │   │   ├── AgentTable.vue
+│   │   │   │   ├── KpiCard.vue
+│   │   │   │   └── UserConversationsModal.vue
 │   │   │   └── users/
 │   │   │       ├── UserTable.vue
 │   │   │       └── UserFormModal.vue
@@ -315,10 +332,12 @@ ProyectoDAW/
 │   │   ├── stores/
 │   │   │   ├── auth.js
 │   │   │   ├── conversations.js
+│   │   │   ├── stats.js
 │   │   │   └── theme.js
 │   │   ├── views/
 │   │   │   ├── LoginView.vue
 │   │   │   ├── MainView.vue
+│   │   │   ├── DashboardView.vue
 │   │   │   ├── UsersView.vue
 │   │   │   └── ProfileView.vue
 │   │   ├── App.vue
@@ -377,6 +396,13 @@ ProyectoDAW/
 | `POST` | `/users` | JWT + ADMIN |
 | `PATCH` | `/users/:id` | JWT + ADMIN |
 | `DELETE` | `/users/:id` | JWT + ADMIN |
+
+## Estadísticas
+
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/stats` | JWT + SUPERVISOR / ADMIN |
+| `GET` | `/stats/users/:userId/conversations` | JWT + SUPERVISOR / ADMIN |
 
 ## Webhook
 
@@ -527,6 +553,8 @@ https://webhook.tudominio.com/webhooks/provider
 | `pinia` | Estado global (auth, conversaciones, tema) |
 | `axios` | Cliente HTTP para la API REST |
 | `socket.io-client` | Eventos en tiempo real |
+| `chart.js` | Motor de gráficos (donut, líneas) |
+| `vue-chartjs` | Wrapper Vue para Chart.js |
 | `vite` *(dev)* | Bundler para desarrollo |
 | `@vitejs/plugin-vue` *(dev)* | Procesado de componentes `.vue` |
 | `tailwindcss` *(dev)* | Estilos responsive |

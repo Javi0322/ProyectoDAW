@@ -623,6 +623,95 @@
       ]
     },
     {
+      "name": "Stats",
+      "id": "st4ts000-0000-0000-0000-000000000001",
+      "item": [
+        {
+          "name": "Stats:GetStats",
+          "id": "st4ts000-0000-0000-0000-000000000002",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats?from=2026-01-01&to=2026-03-30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "description": "Inicio del período (YYYY-MM-DD). Por defecto: últimos 30 días"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-30",
+                  "description": "Fin del período (YYYY-MM-DD). Por defecto: hoy"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Stats:UserConversations",
+          "id": "st4ts000-0000-0000-0000-000000000003",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats/users/{{userId}}/conversations?from=2026-01-01&to=2026-03-30",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats",
+                "users",
+                "{{userId}}",
+                "conversations"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-01-01",
+                  "description": "Inicio del período (YYYY-MM-DD)"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-03-30",
+                  "description": "Fin del período (YYYY-MM-DD)"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Health",
       "id": "121ada62-212b-4bad-910f-7c506cd9e586",
       "request": {
