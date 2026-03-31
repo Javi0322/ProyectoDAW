@@ -148,6 +148,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
+import { safeImageUrl } from '@/utils/userFormatting.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -158,12 +159,6 @@ const userInitial = computed(() => {
   const name = fullName || email || '?'
   return name.charAt(0).toUpperCase()
 })
-
-function safeImageUrl(url) {
-  if (!url) return null
-  if (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/')) return url
-  return null
-}
 
 const avatarError = ref(false)
 const userAvatar = computed(() => authStore.user?.avatarUrl ?? null)

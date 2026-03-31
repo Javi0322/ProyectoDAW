@@ -94,6 +94,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useConversationsStore } from '@/stores/conversations.js'
+import { formatDate } from '@/utils/userFormatting.js'
 import ConversationHeader from './ConversationHeader.vue'
 import MessageBubble from './MessageBubble.vue'
 import MessageInput from './MessageInput.vue'
@@ -166,13 +167,4 @@ function showDateSeparator(msg, idx) {
   return prevDate !== currDate
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffDays = Math.floor((now - date) / 86400000)
-  if (diffDays === 0) return 'Hoy'
-  if (diffDays === 1) return 'Ayer'
-  return `${String(date.getDate()).padStart(2,'0')}-${String(date.getMonth()+1).padStart(2,'0')}-${date.getFullYear()}`
-}
 </script>

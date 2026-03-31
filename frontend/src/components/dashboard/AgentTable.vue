@@ -84,6 +84,8 @@
 </template>
 
 <script setup>
+import { colorFromId, initials, userName, roleBadgeClass } from '@/utils/userFormatting.js'
+
 defineProps({
   users: {
     type: Array,
@@ -92,25 +94,4 @@ defineProps({
 })
 
 const emit = defineEmits(['selectUser'])
-
-function userName(user) {
-  const full = [user.firstName, user.lastName].filter(Boolean).join(' ')
-  return full || `Usuario #${user.userId}`
-}
-
-function initials(user) {
-  const name = userName(user)
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-}
-
-function colorFromId(id) {
-  const palette = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444']
-  return palette[Number(id ?? 0) % palette.length]
-}
-
-function roleBadgeClass(role) {
-  if (role === 'ADMIN')      return 'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400'
-  if (role === 'SUPERVISOR') return 'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400'
-  return 'bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400'
-}
 </script>

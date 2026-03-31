@@ -200,15 +200,14 @@ import { Chart, registerables } from 'chart.js'
 import { Doughnut, Line } from 'vue-chartjs'
 
 import { useStatsStore } from '../stores/stats.js'
-import { useAuthStore } from '../stores/auth.js'
 import AppNavbar from '../components/layout/AppNavbar.vue'
+import { isoToDisplay } from '../utils/userFormatting.js'
 import KpiCard from '../components/dashboard/KpiCard.vue'
 import AgentTable from '../components/dashboard/AgentTable.vue'
 
 Chart.register(...registerables)
 
 const statsStore = useStatsStore()
-const authStore = useAuthStore()
 
 const selectedUser = ref(null)
 
@@ -337,12 +336,6 @@ const lineOptions = {
       beginAtZero: true,
     },
   },
-}
-
-function isoToDisplay(s) {
-  if (!s) return ''
-  const [y, m, d] = s.split('-')
-  return `${d}-${m}-${y}`
 }
 
 function fillDays(fromISO, toISO, dataByDate) {

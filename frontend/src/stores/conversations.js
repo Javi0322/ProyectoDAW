@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
+import api from '@/api/axios.js'
 
 export function normalizeConversation(conv) {
   if (!conv.lastMessage && conv.lastMessageText) {
@@ -24,7 +25,6 @@ export const useConversationsStore = defineStore('conversations', () => {
   const loadingMessages = ref(false)
 
   async function fetchConversations() {
-    const { default: api } = await import('@/api/axios.js')
     loadingConversations.value = true
     try {
       page.value = 1
@@ -41,7 +41,6 @@ export const useConversationsStore = defineStore('conversations', () => {
   }
 
   async function loadMoreConversations() {
-    const { default: api } = await import('@/api/axios.js')
     const nextPage = page.value + 1
     const params = { scope: filters.scope, page: nextPage, pageSize: 20 }
     if (filters.status) params.status = filters.status
@@ -52,7 +51,6 @@ export const useConversationsStore = defineStore('conversations', () => {
   }
 
   async function selectConversation(id) {
-    const { default: api } = await import('@/api/axios.js')
     const res = await api.get(`/conversations/${id}`)
     activeConversation.value = normalizeConversation(res.data.conversation)
     messages.value = []
@@ -70,7 +68,6 @@ export const useConversationsStore = defineStore('conversations', () => {
   }
 
   async function fetchMessages(id) {
-    const { default: api } = await import('@/api/axios.js')
     loadingMessages.value = true
     try {
       const res = await api.get(`/conversations/${id}/messages`, {
@@ -86,7 +83,6 @@ export const useConversationsStore = defineStore('conversations', () => {
 
   async function loadMoreMessages() {
     if (!activeConversation.value || !nextCursor.value) return
-    const { default: api } = await import('@/api/axios.js')
     const res = await api.get(`/conversations/${activeConversation.value.id}/messages`, {
       params: { limit: 50, cursor: nextCursor.value },
     })
@@ -97,7 +93,6 @@ export const useConversationsStore = defineStore('conversations', () => {
   }
 
   async function sendMessage(id, text) {
-    const { default: api } = await import('@/api/axios.js')
     const res = await api.post(`/conversations/${id}/messages`, { text })
     return res.data.message
   }

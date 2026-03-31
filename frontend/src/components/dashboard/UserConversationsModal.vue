@@ -106,6 +106,7 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../../api/axios.js'
 import { useConversationsStore } from '../../stores/conversations.js'
+import { colorFromId, initials, userName, formatDate, isoToDisplay } from '../../utils/userFormatting.js'
 
 const props = defineProps({
   user: { default: null },
@@ -150,18 +151,6 @@ function contactName(conv) {
   return conv.contactName || conv.customerPhone || 'Sin nombre'
 }
 
-function formatDate(dateStr) {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return `${String(d.getDate()).padStart(2,'0')}-${String(d.getMonth()+1).padStart(2,'0')}-${d.getFullYear()}`
-}
-
-function isoToDisplay(s) {
-  if (!s) return ''
-  const [y, m, d] = s.split('-')
-  return `${d}-${m}-${y}`
-}
-
 const STATUS_COLORS = {
   OPEN:    { bg: 'bg-emerald-100 dark:bg-emerald-950/40', text: 'text-emerald-700 dark:text-emerald-400' },
   PENDING: { bg: 'bg-orange-100 dark:bg-orange-950/40',  text: 'text-orange-700 dark:text-orange-400' },
@@ -172,19 +161,6 @@ function statusClass(status) {
   return STATUS_COLORS[status] ?? STATUS_COLORS.CLOSED
 }
 
-function colorFromId(id) {
-  const palette = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ef4444']
-  return palette[Number(id ?? 0) % palette.length]
-}
-
-function initials(u) {
-  const full = [u.firstName, u.lastName].filter(Boolean).join(' ')
-  return full ? full.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() : '?'
-}
-
-function userName(u) {
-  return [u.firstName, u.lastName].filter(Boolean).join(' ') || `Usuario #${u.userId}`
-}
 </script>
 
 <style scoped>

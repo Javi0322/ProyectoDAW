@@ -71,7 +71,7 @@
               {{ user?.email }}
             </p>
             <div class="mt-2">
-              <span class="status-badge text-xs" :class="roleBadgeClass">
+              <span class="status-badge text-xs" :class="roleBadgeClass(user?.role)">
                 {{ user?.role }}
               </span>
             </div>
@@ -91,7 +91,7 @@
         </div>
         <div class="flex items-center justify-between px-5 py-4">
           <span class="text-sm text-zinc-500 dark:text-zinc-400">Rol</span>
-          <span class="status-badge text-xs" :class="roleBadgeClass">{{ user?.role }}</span>
+          <span class="status-badge text-xs" :class="roleBadgeClass(user?.role)">{{ user?.role }}</span>
         </div>
         <div class="flex items-center justify-between px-5 py-4">
           <span class="text-sm text-zinc-500 dark:text-zinc-400">Estado de cuenta</span>
@@ -146,17 +146,12 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-
-function safeImageUrl(url) {
-  if (!url) return null
-  if (url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/')) return url
-  return null
-}
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.js'
 import { useThemeStore } from '@/stores/theme.js'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import api from '@/api/axios.js'
+import { safeImageUrl, roleBadgeClass } from '@/utils/userFormatting.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -204,17 +199,6 @@ const fullName = computed(() =>
 const userInitial = computed(() =>
   fullName.value.charAt(0).toUpperCase()
 )
-
-const roleBadgeClass = computed(() => {
-  switch (user.value?.role) {
-    case 'ADMIN':
-      return 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400'
-    case 'SUPERVISOR':
-      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-    default:
-      return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
-  }
-})
 
 function handleLogout() {
   authStore.logout()
