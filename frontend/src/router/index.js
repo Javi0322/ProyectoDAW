@@ -33,6 +33,12 @@ const routes = [
     meta: { requiresAuth: true, requiresRole: ['SUPERVISOR', 'ADMIN'] },
   },
   {
+    path: '/labels',
+    name: 'Labels',
+    component: () => import('@/views/LabelsView.vue'),
+    meta: { requiresAuth: true, requiresRole: 'ADMIN' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/',
   },

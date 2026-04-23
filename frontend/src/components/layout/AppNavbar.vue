@@ -34,6 +34,17 @@
     </RouterLink>
 
     <RouterLink
+      v-if="authStore.isAdmin"
+      to="/labels"
+      class="flex-1 flex items-center justify-center h-full transition-colors"
+      :class="$route.path === '/labels' ? 'text-brand-accent' : 'text-zinc-400 dark:text-zinc-500'"
+    >
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 10V5a2 2 0 012-2z" />
+      </svg>
+    </RouterLink>
+
+    <RouterLink
       to="/me"
       class="flex-1 flex items-center justify-center h-full"
     >
@@ -103,6 +114,21 @@
         </svg>
         <span class="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md bg-zinc-900 dark:bg-zinc-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
           Usuarios
+        </span>
+      </RouterLink>
+
+      <RouterLink
+        v-if="authStore.isAdmin"
+        to="/labels"
+        class="group relative flex items-center justify-center w-9 h-9 rounded-lg transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800"
+        :class="$route.path === '/labels' ? 'bg-brand-accent/10 text-brand-accent' : 'text-zinc-500 dark:text-zinc-400'"
+        title="Etiquetas"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 10V5a2 2 0 012-2z" />
+        </svg>
+        <span class="pointer-events-none absolute left-full ml-2 px-2 py-1 rounded-md bg-zinc-900 dark:bg-zinc-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          Etiquetas
         </span>
       </RouterLink>
     </nav>

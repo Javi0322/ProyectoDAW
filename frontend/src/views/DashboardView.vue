@@ -187,6 +187,52 @@
         :to="statsStore.to"
         @close="selectedUser = null"
       />
+
+      <template v-if="labelStats">
+        <hr class="border-zinc-200 dark:border-zinc-800 my-6" />
+
+        <p class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 font-mono mb-1">Por etiqueta</p>
+        <p class="text-xs text-zinc-400 dark:text-zinc-500 mb-3">Conversaciones categorizadas por etiqueta asignada.</p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-5">
+          <KpiCard
+            label="Con etiqueta"
+            :value="labelStats.conversationsWithAnyLabel"
+            subtitle="Conversaciones con 1 o más etiquetas"
+            color="violet"
+          />
+          <KpiCard
+            v-for="lk in labelStats.labelKpis"
+            :key="lk.id"
+            :label="lk.name"
+            :value="lk.count"
+            :subtitle="`Conversaciones con etiqueta ${lk.name}`"
+            color="violet"
+          />
+        </div>
+
+        <div class="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm p-5 mb-6">
+          <div class="flex items-center justify-between mb-4 gap-3">
+            <h3 class="text-xs font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 font-mono">
+              Conversaciones por etiqueta
+            </h3>
+            <select
+              v-model="labelStatusFilter"
+              @change="fetchLabelStats(labelStatusFilter || null)"
+              class="text-xs rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 px-2 py-1 outline-none focus:ring-2 focus:ring-sky-500/50"
+            >
+              <option value="">Todas</option>
+              <option value="OPEN">Abiertas</option>
+              <option value="PENDING">Pendientes</option>
+              <option value="CLOSED">Cerradas</option>
+            </select>
+          </div>
+          <div v-if="labelDonutData" class="flex items-center justify-center" style="height: 280px;">
+            <Doughnut :data="labelDonutData" :options="donutOptions" />
+          </div>
+          <p v-else class="text-sm text-zinc-400 text-center py-10">Sin datos de etiquetas</p>
+        </div>
+      </template>
     </template>
 
     </main>
@@ -204,12 +250,38 @@ import AppNavbar from '../components/layout/AppNavbar.vue'
 import { isoToDisplay } from '../utils/userFormatting.js'
 import KpiCard from '../components/dashboard/KpiCard.vue'
 import AgentTable from '../components/dashboard/AgentTable.vue'
+import api from '@/api/axios.js'
 
 Chart.register(...registerables)
 
 const statsStore = useStatsStore()
 
 const selectedUser = ref(null)
+const labelStats = ref(null)
+const labelStatusFilter = ref('')
+
+async function fetchLabelStats(status = null) {
+  try {
+    const res = await api.get('/stats/labels', { params: status ? { status } : {} })
+    labelStats.value = res.data
+  } catch (err) {
+    console.error('[dashboard] label stats error:', err.response?.data ?? err.message)
+  }
+}
+
+const labelDonutData = computed(() => {
+  const kpis = labelStats.value?.labelKpis
+  if (!kpis || kpis.length === 0) return null
+  return {
+    labels: kpis.map((k) => k.name),
+    datasets: [{
+      data: kpis.map((k) => k.count),
+      backgroundColor: kpis.map((k) => k.color),
+      borderWidth: 0,
+      hoverOffset: 6,
+    }],
+  }
+})
 
 // ---------- Date helpers ----------
 function toISO(d) {
@@ -426,6 +498,7 @@ onMounted(() => {
   fromDate.setDate(fromDate.getDate() - 30)
   statsStore.setRange(toISO(fromDate), toISO(toDate))
   statsStore.startPolling(60000)
+  fetchLabelStats()
 })
 
 onUnmounted(() => statsStore.stopPolling())

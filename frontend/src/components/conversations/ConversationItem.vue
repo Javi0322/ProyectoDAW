@@ -66,6 +66,17 @@
           {{ conversation.assignedTo.name }}
         </span>
       </div>
+
+      <!-- Label dots -->
+      <div v-if="conversation.labels?.length" class="mt-1 flex items-center gap-1">
+        <span
+          v-for="cl in conversation.labels"
+          :key="cl.label.id"
+          class="w-2.5 h-2.5 rounded-full shrink-0"
+          :style="{ backgroundColor: cl.label.color }"
+          :title="cl.label.name"
+        />
+      </div>
     </div>
   </button>
 </template>

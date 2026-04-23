@@ -154,6 +154,46 @@
         </Transition>
       </div>
 
+      <!-- Label dropdown (desktop) -->
+      <div class="hidden lg:block relative" ref="labelDropdownRef">
+        <button
+          class="btn-secondary text-xs py-1.5"
+          @click="toggleLabelDropdown"
+          :disabled="actionLoading"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 10V5a2 2 0 012-2z" />
+          </svg>
+          Etiquetas <span class="text-zinc-400">({{ selectedLabelIds.length }}/5)</span>
+          <svg class="w-3 h-3 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <Transition name="dropdown">
+          <div
+            v-if="showLabelDropdown"
+            class="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-xl z-20 py-1 overflow-hidden"
+          >
+            <div v-if="labelsStore.labels.length === 0" class="px-3 py-3 text-xs text-zinc-400 text-center">
+              Sin etiquetas creadas
+            </div>
+            <button
+              v-for="label in labelsStore.labels"
+              :key="label.id"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              :class="selectedLabelIds.includes(label.id) ? 'text-brand-accent' : 'text-zinc-700 dark:text-zinc-300'"
+              :disabled="!selectedLabelIds.includes(label.id) && selectedLabelIds.length >= 5"
+              @click="toggleLabel(label)"
+            >
+              <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: label.color }" />
+              <span class="truncate flex-1">{{ label.name }}</span>
+              <span v-if="selectedLabelIds.includes(label.id)" class="ml-auto text-brand-accent">✓</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
+
       <!-- Móvil/Tablet (<lg): botón hamburguesa con menú combinado -->
       <div class="lg:hidden relative" ref="mobileMenuRef">
         <button
@@ -231,6 +271,29 @@
               {{ opt.label }}
               <span v-if="conv.status === opt.value" class="ml-auto text-brand-accent">✓</span>
             </button>
+
+            <!-- Separador -->
+            <div class="border-t border-zinc-200 dark:border-zinc-700 my-1"></div>
+
+            <!-- Sección etiquetas -->
+            <div class="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              Etiquetas ({{ selectedLabelIds.length }}/5)
+            </div>
+            <div v-if="labelsStore.labels.length === 0" class="px-3 py-2 text-xs text-zinc-400 text-center">
+              Sin etiquetas creadas
+            </div>
+            <button
+              v-for="label in labelsStore.labels"
+              :key="label.id"
+              class="w-full text-left px-3 py-2 text-xs flex items-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              :class="selectedLabelIds.includes(label.id) ? 'text-brand-accent' : 'text-zinc-700 dark:text-zinc-300'"
+              :disabled="!selectedLabelIds.includes(label.id) && selectedLabelIds.length >= 5"
+              @click="toggleLabel(label)"
+            >
+              <span class="w-3 h-3 rounded-full shrink-0" :style="{ backgroundColor: label.color }" />
+              <span class="truncate flex-1">{{ label.name }}</span>
+              <span v-if="selectedLabelIds.includes(label.id)" class="ml-auto text-brand-accent">✓</span>
+            </button>
           </div>
         </Transition>
       </div>
@@ -243,6 +306,7 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useAuthStore } from '@/stores/auth.js'
 import { useConversationsStore } from '@/stores/conversations.js'
+import { useLabelsStore } from '@/stores/labels.js'
 import api from '@/api/axios.js'
 
 const props = defineProps({
@@ -254,16 +318,23 @@ const props = defineProps({
 
 const authStore = useAuthStore()
 const convStore = useConversationsStore()
+const labelsStore = useLabelsStore()
 
 const actionLoading = ref(false)
 const showAssignDropdown = ref(false)
 const showStatusDropdown = ref(false)
+const showLabelDropdown = ref(false)
 const showMobileMenu = ref(false)
 const users = ref([])
 const loadingUsers = ref(false)
 const assignDropdownRef = ref(null)
 const statusDropdownRef = ref(null)
+const labelDropdownRef = ref(null)
 const mobileMenuRef = ref(null)
+
+const selectedLabelIds = computed(() =>
+  (props.conv.labels ?? []).map((cl) => cl.label.id)
+)
 
 const displayName = computed(() => {
   return props.conv.contactName || props.conv.customerPhone || props.conv.externalId || 'Desconocido'
@@ -400,6 +471,7 @@ async function changeStatus(status) {
 
 async function toggleAssignDropdown() {
   showStatusDropdown.value = false
+  showLabelDropdown.value = false
   showMobileMenu.value = false
   showAssignDropdown.value = !showAssignDropdown.value
   if (showAssignDropdown.value) await loadUsers()
@@ -407,15 +479,39 @@ async function toggleAssignDropdown() {
 
 function toggleStatusDropdown() {
   showAssignDropdown.value = false
+  showLabelDropdown.value = false
   showMobileMenu.value = false
   showStatusDropdown.value = !showStatusDropdown.value
+}
+
+async function toggleLabelDropdown() {
+  showAssignDropdown.value = false
+  showStatusDropdown.value = false
+  showMobileMenu.value = false
+  if (!showLabelDropdown.value && labelsStore.labels.length === 0) {
+    await labelsStore.fetchLabels()
+  }
+  showLabelDropdown.value = !showLabelDropdown.value
+}
+
+async function toggleLabel(label) {
+  if (selectedLabelIds.value.includes(label.id)) {
+    await convStore.removeLabelFromConversation(props.conv.id, label.id)
+  } else {
+    if (selectedLabelIds.value.length >= 5) return
+    await convStore.addLabelToConversation(props.conv.id, label)
+  }
 }
 
 async function toggleMobileMenu() {
   showAssignDropdown.value = false
   showStatusDropdown.value = false
+  showLabelDropdown.value = false
   showMobileMenu.value = !showMobileMenu.value
-  if (showMobileMenu.value) await loadUsers()
+  if (showMobileMenu.value) {
+    await loadUsers()
+    if (labelsStore.labels.length === 0) await labelsStore.fetchLabels()
+  }
 }
 
 function handleClickOutside(e) {
@@ -424,6 +520,9 @@ function handleClickOutside(e) {
   }
   if (statusDropdownRef.value && !statusDropdownRef.value.contains(e.target)) {
     showStatusDropdown.value = false
+  }
+  if (labelDropdownRef.value && !labelDropdownRef.value.contains(e.target)) {
+    showLabelDropdown.value = false
   }
   if (mobileMenuRef.value && !mobileMenuRef.value.contains(e.target)) {
     showMobileMenu.value = false

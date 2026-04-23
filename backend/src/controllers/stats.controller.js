@@ -271,4 +271,43 @@ async function getUserConversations(req, res) {
   }
 }
 
-module.exports = { getStats, getUserConversations };
+async function getLabelStats(req, res) {
+  try {
+    const status = req.query.status ? String(req.query.status).toUpperCase() : null;
+    if (status && !['OPEN', 'PENDING', 'CLOSED'].includes(status)) {
+      return res.status(400).json({ ok: false, error: 'invalid status' });
+    }
+
+    const labels = await prisma.label.findMany({
+      where: { active: true },
+      select: { id: true, name: true, color: true },
+      orderBy: { name: 'asc' },
+    });
+
+    const labelKpis = await Promise.all(
+      labels.map(async (label) => {
+        const count = await prisma.conversationLabel.count({
+          where: {
+            labelId: label.id,
+            ...(status && { conversation: { status } }),
+          },
+        });
+        return { id: label.id, name: label.name, color: label.color, count };
+      })
+    );
+
+    const conversationsWithAnyLabel = await prisma.conversation.count({
+      where: {
+        labels: { some: { label: { active: true } } },
+        ...(status && { status }),
+      },
+    });
+
+    return res.json({ ok: true, labelKpis, conversationsWithAnyLabel });
+  } catch (err) {
+    console.error('[getLabelStats]', err);
+    return res.status(500).json({ ok: false, error: 'Internal server error' });
+  }
+}
+
+module.exports = { getStats, getUserConversations, getLabelStats };

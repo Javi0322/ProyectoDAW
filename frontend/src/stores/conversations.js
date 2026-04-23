@@ -136,6 +136,27 @@ export const useConversationsStore = defineStore('conversations', () => {
     }
   }
 
+  async function addLabelToConversation(convId, label) {
+    await api.post(`/conversations/${convId}/labels`, { labelId: label.id })
+    const newEntry = { label }
+    const update = (conv) => {
+      if (!conv || conv.id !== convId) return
+      conv.labels = [...(conv.labels ?? []), newEntry]
+    }
+    items.value.forEach(update)
+    update(activeConversation.value)
+  }
+
+  async function removeLabelFromConversation(convId, labelId) {
+    await api.delete(`/conversations/${convId}/labels/${labelId}`)
+    const strip = (conv) => {
+      if (!conv || conv.id !== convId) return
+      conv.labels = (conv.labels ?? []).filter((cl) => cl.label.id !== labelId)
+    }
+    items.value.forEach(strip)
+    strip(activeConversation.value)
+  }
+
   function setFilter(key, value) {
     filters[key] = value
   }
@@ -161,6 +182,8 @@ export const useConversationsStore = defineStore('conversations', () => {
     updateMessage,
     updateConversationInList,
     removeConversationFromList,
+    addLabelToConversation,
+    removeLabelFromConversation,
     setFilter,
   }
 })

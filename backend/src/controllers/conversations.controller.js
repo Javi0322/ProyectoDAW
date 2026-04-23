@@ -81,6 +81,10 @@ async function listConversations(req, res) {
             lastReadAt: true,
           },
         },
+        labels: {
+          where: { label: { active: true } },
+          select: { label: { select: { id: true, name: true, color: true } } },
+        },
       },
     }),
   ]);
@@ -447,6 +451,10 @@ async function getConversationById(req, res) {
           active: true,
         },
       },
+      labels: {
+        where: { label: { active: true } },
+        select: { label: { select: { id: true, name: true, color: true } } },
+      },
     },
   });
 
@@ -636,6 +644,46 @@ async function updateContactName(req, res) {
   return res.json({ ok: true, conversation: updated });
 }
 
+async function addLabel(req, res) {
+  const conversationId = Number(req.params.id);
+  const labelId = Number(req.body.labelId);
+
+  if (!conversationId) return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  if (!labelId) return res.status(400).json({ ok: false, error: "labelId is required" });
+
+  const conversation = await prisma.conversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true, _count: { select: { labels: true } } },
+  });
+  if (!conversation) return res.status(404).json({ ok: false, error: "conversation not found" });
+  if (conversation._count.labels >= 5) return res.status(400).json({ ok: false, error: "max 5 labels per conversation" });
+
+  const label = await prisma.label.findUnique({ where: { id: labelId } });
+  if (!label || !label.active) return res.status(404).json({ ok: false, error: "label not found" });
+
+  try {
+    await prisma.conversationLabel.create({ data: { conversationId, labelId } });
+  } catch (err) {
+    if (err.code === "P2002") return res.status(409).json({ ok: false, error: "label already assigned" });
+    throw err;
+  }
+
+  return res.status(201).json({ ok: true, label: { id: label.id, name: label.name, color: label.color } });
+}
+
+async function removeLabel(req, res) {
+  const conversationId = Number(req.params.id);
+  const labelId = Number(req.params.labelId);
+
+  if (!conversationId) return res.status(400).json({ ok: false, error: "invalid conversation id" });
+  if (!labelId) return res.status(400).json({ ok: false, error: "invalid label id" });
+
+  const deleted = await prisma.conversationLabel.deleteMany({ where: { conversationId, labelId } });
+  if (deleted.count === 0) return res.status(404).json({ ok: false, error: "label not assigned to this conversation" });
+
+  return res.json({ ok: true });
+}
+
 module.exports = {
   listConversations,
   assignToMe,
@@ -646,5 +694,7 @@ module.exports = {
   getConversationById,
   updateConversationStatus,
   markConversationAsRead,
-  updateContactName
-                 };
+  updateContactName,
+  addLabel,
+  removeLabel,
+};

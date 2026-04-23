@@ -19,7 +19,9 @@ const {
     getConversationById,
     updateConversationStatus,
     markConversationAsRead,
-    updateContactName
+    updateContactName,
+    addLabel,
+    removeLabel,
   } = require("../controllers/conversations.controller");
 
 const router = express.Router();
@@ -34,5 +36,7 @@ router.post("/:id/messages", requireAuth, sendMessageLimiter, sendMessage);
 router.patch("/:id/status", requireAuth, updateConversationStatus);
 router.post("/:id/read", requireAuth, markConversationAsRead);
 router.patch("/:id/contact", requireAuth, updateContactName);
+router.post("/:id/labels", requireAuth, addLabel);
+router.delete("/:id/labels/:labelId", requireAuth, removeLabel);
 
 module.exports = router;

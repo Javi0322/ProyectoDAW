@@ -58,6 +58,7 @@ model Conversation {
   id            Int                @id @default(autoincrement())
   externalId    String             @unique
   customerPhone   String?
+  customerEmail   String?
   contactName     String?
   status        ConversationStatus @default(OPEN)
   assignedToId  Int?
@@ -68,6 +69,7 @@ model Conversation {
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
   userStates ConversationUserState[]
+  labels     ConversationLabel[]
 
   @@index([status])
   @@index([assignedToId])
@@ -90,6 +92,30 @@ model Message {
   createdAt        DateTime         @default(now())
 
   @@index([conversationId, occurredAt])
+}
+
+
+model Label {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  color     String   // Hex: "#f59e0b"
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  conversations ConversationLabel[]
+}
+
+model ConversationLabel {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  labelId        Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  label          Label        @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([conversationId, labelId])
+  @@index([conversationId])
+  @@index([labelId])
 }
 
 
