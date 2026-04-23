@@ -38,9 +38,18 @@
         >
           {{ displayName }}
         </span>
-        <span class="text-[11px] font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
-          {{ formattedTime }}
-        </span>
+        <div class="flex items-center gap-1 shrink-0">
+          <span
+            v-for="cl in conversation.labels"
+            :key="cl.label.id"
+            class="w-2 h-2 rounded-full"
+            :style="{ backgroundColor: cl.label.color }"
+            :title="cl.label.name"
+          />
+          <span class="text-[11px] font-mono text-zinc-400 dark:text-zinc-500">
+            {{ formattedTime }}
+          </span>
+        </div>
       </div>
 
       <p class="text-xs text-zinc-500 dark:text-zinc-400 truncate leading-relaxed">
@@ -65,17 +74,6 @@
         >
           {{ conversation.assignedTo.name }}
         </span>
-      </div>
-
-      <!-- Label dots -->
-      <div v-if="conversation.labels?.length" class="mt-1 flex items-center gap-1">
-        <span
-          v-for="cl in conversation.labels"
-          :key="cl.label.id"
-          class="w-2.5 h-2.5 rounded-full shrink-0"
-          :style="{ backgroundColor: cl.label.color }"
-          :title="cl.label.name"
-        />
       </div>
     </div>
   </button>
