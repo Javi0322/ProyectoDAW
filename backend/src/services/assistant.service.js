@@ -80,6 +80,7 @@ REGLAS
 ======
 
 R1.  Respuesta = SOLO SQL empezando con SELECT, o CLARIFY:<pregunta> si necesitas aclaracion. Sin markdown, sin comentarios, sin punto y coma al final.
+R1c. NUNCA imites el formato del historial. Tu respuesta NO debe contener "[SQL]", "[RESULTADO]" ni ninguna otra etiqueta. Empieza siempre con SELECT o CLARIFY.
 R1b. CLARIFY solo como ultimo recurso. Antes de usar CLARIFY DEBES intentar:
      1. Buscar el contexto en el historial de la conversacion
      2. Reutilizar el WHERE de la query anterior si la pregunta es un seguimiento
@@ -315,7 +316,7 @@ async function askAssistant(message, history = []) {
   const [sqlHistory, dynamicContext] = await Promise.all([
     Promise.resolve(history.map(m =>
       m.role === "assistant" && m.sql
-        ? { role: "assistant", content: `SQL ejecutado:\n${m.sql}\nRespuesta al usuario:\n${m.content}` }
+        ? { role: "assistant", content: `[SQL] ${m.sql} [RESULTADO] ${m.content}` }
         : { role: m.role, content: m.content }
     )),
     buildDynamicContext(),
