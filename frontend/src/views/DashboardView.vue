@@ -5,16 +5,28 @@
     <main class="max-w-6xl w-full mx-auto px-4 md:px-6 py-8">
 
     <!-- Header -->
-    <div class="mb-8 flex flex-col gap-1">
-      <div class="flex items-center gap-2">
-        <svg class="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-        <h1 class="text-2xl font-black tracking-tight text-zinc-900 dark:text-white" style="font-family: 'DM Sans', 'Sora', sans-serif;">
-          Dashboard
-        </h1>
+    <div class="mb-8 flex items-start justify-between gap-4">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-brand-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <h1 class="text-2xl font-black tracking-tight text-zinc-900 dark:text-white" style="font-family: 'DM Sans', 'Sora', sans-serif;">
+            Dashboard
+          </h1>
+        </div>
+        <p class="text-sm text-zinc-400 dark:text-zinc-500 font-mono">Métricas de conversaciones y agentes</p>
       </div>
-      <p class="text-sm text-zinc-400 dark:text-zinc-500 font-mono">Métricas de conversaciones y agentes</p>
+      <button
+        v-if="authStore.isAdmin || authStore.isSupervisor"
+        @click="assistantOpen = true"
+        class="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500 hover:bg-violet-600 text-white text-sm font-semibold transition-colors shadow-sm"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+        </svg>
+        Asistente IA
+      </button>
     </div>
 
     <!-- Date filters -->
@@ -235,12 +247,15 @@
       </template>
     </template>
 
+      <AssistantPanel :isOpen="assistantOpen" @close="assistantOpen = false" />
     </main>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import AssistantPanel from '../components/dashboard/AssistantPanel.vue'
+import { useAuthStore } from '../stores/auth.js'
 import UserConversationsModal from '../components/dashboard/UserConversationsModal.vue'
 import { Chart, registerables } from 'chart.js'
 import { Doughnut, Line } from 'vue-chartjs'
@@ -255,6 +270,8 @@ import api from '@/api/axios.js'
 Chart.register(...registerables)
 
 const statsStore = useStatsStore()
+const authStore = useAuthStore()
+const assistantOpen = ref(false)
 
 const selectedUser = ref(null)
 const labelStats = ref(null)

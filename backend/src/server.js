@@ -9,6 +9,7 @@ const conversationsRoutes = require("./routes/conversations.routes");
 const usersRoutes = require("./routes/users.routes");
 const statsRoutes = require("./routes/stats.routes");
 const labelsRoutes = require("./routes/labels.routes");
+const assistantRoutes = require("./routes/assistant.routes");
 const http = require("http");
 const { Server } = require("socket.io");
 const { setSocketServer } = require("./socket");
@@ -30,6 +31,7 @@ app.use("/conversations", jsonStrict, conversationsRoutes);
 app.use("/users", jsonStrict, usersRoutes);
 app.use("/stats", jsonStrict, statsRoutes);
 app.use("/labels", jsonStrict, labelsRoutes);
+app.use("/assistant", jsonStrict, assistantRoutes);
 
 
 // Ruta de prueba

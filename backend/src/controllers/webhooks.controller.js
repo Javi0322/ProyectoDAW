@@ -1,5 +1,7 @@
 const { prisma } = require("../prisma/client");
 const { emitToConversationAudience } = require("../services/realtime.service");
+const Sentiment = require("sentiment");
+const sentimentAnalyzer = new Sentiment();
 
 // saca conversationId del payload (varía según evento)
 function getExternalConversationId(body) {
@@ -93,6 +95,18 @@ async function providerWebhook(req, res) {
               conversationId : conversation.id,
             },
           });
+
+          if (direction === "IN" && text) {
+            const result = sentimentAnalyzer.analyze(text);
+            const label = result.score <= -4 ? "angry"
+              : result.score < 0  ? "negative"
+              : result.score === 0 ? "neutral"
+              : "positive";
+            await prisma.message.update({
+              where: { id: message.id },
+              data: { sentiment: label },
+            });
+          }
 
           await prisma.conversation.update({
             where: { id: conversation.id },

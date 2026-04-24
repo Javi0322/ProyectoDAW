@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(mysql *)",
+      "Bash(npx prisma *)",
+      "Bash(node -e \"require\\('express-rate-limit'\\)\")"
+    ]
+  }
+}
