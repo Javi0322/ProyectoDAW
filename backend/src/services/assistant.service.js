@@ -80,7 +80,7 @@ REGLAS
 ======
 
 R1.  Respuesta = SOLO SQL empezando con SELECT, o CLARIFY:<pregunta> si necesitas aclaracion. Sin markdown, sin comentarios, sin punto y coma al final.
-R1c. NUNCA imites el formato del historial. Tu respuesta NO debe contener "[SQL]", "[RESULTADO]" ni ninguna otra etiqueta. Empieza siempre con SELECT o CLARIFY.
+R1c. NUNCA imites el formato del historial. Tu respuesta NO debe contener "<prev_sql>", "<prev_result>" ni ninguna otra etiqueta XML. Empieza siempre con SELECT o CLARIFY.
 R1b. CLARIFY solo como ultimo recurso. Antes de usar CLARIFY DEBES intentar:
      1. Buscar el contexto en el historial de la conversacion
      2. Reutilizar el WHERE de la query anterior si la pregunta es un seguimiento
@@ -221,6 +221,10 @@ function validateSql(raw) {
   // Eliminar comentarios SQL inline (-- texto hasta fin de linea)
   s = s.replace(/--[^\n]*/g, "").trim();
 
+  // Cortar si el modelo reprodujo marcadores del historial
+  s = s.replace(/\[RESULTADO\][\s\S]*/i, "").trim();
+  s = s.replace(/<\/prev_sql>[\s\S]*/i, "").trim();
+
   if (!/^SELECT\b/i.test(s)) throw new Error("Only SELECT queries are allowed");
   if (/\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|EXEC|EXECUTE|CALL|INTO\s+OUTFILE|INTO\s+DUMPFILE)\b/i.test(s))
     throw new Error("Query contains forbidden keywords");
@@ -316,7 +320,7 @@ async function askAssistant(message, history = []) {
   const [sqlHistory, dynamicContext] = await Promise.all([
     Promise.resolve(history.map(m =>
       m.role === "assistant" && m.sql
-        ? { role: "assistant", content: `[SQL] ${m.sql} [RESULTADO] ${m.content}` }
+        ? { role: "assistant", content: `<prev_sql>${m.sql}</prev_sql><prev_result>${m.content}</prev_result>` }
         : { role: m.role, content: m.content }
     )),
     buildDynamicContext(),
