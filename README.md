@@ -21,6 +21,8 @@ El sistema se conecta a un proveedor externo de mensajería que:
 - `crypto.scrypt` (hash de contraseñas)
 - Multer (subida de avatares)
 - Express Rate Limit
+- Analizador de sentimiento propio en español (`sentiment.service.js`)
+- RunPod + Ollama (`qwen2.5-coder:14b` / `32b`) — inferencia del asistente IA
 
 ### Frontend
 
@@ -48,6 +50,7 @@ El sistema se conecta a un proveedor externo de mensajería que:
 - Paginación con "cargar más"
 - Indicador de no leído
 - Búsqueda en tiempo real vía Socket.IO
+- Puntos de colores en cada elemento de la lista para mostrar las etiquetas asignadas a la conversación
 
 ### Vista de chat
 
@@ -64,6 +67,7 @@ El sistema se conecta a un proveedor externo de mensajería que:
 - Asignación de agente con dropdown (carga usuarios desde API)
 - Cambio de estado de conversación (Abierta / Pendiente / Cerrada)
 - Badge de estado del contacto
+- Gestión de etiquetas: dropdown con listado de etiquetas disponibles, checkbox para añadir/quitar, contador de etiquetas asignadas (máx. 5)
 
 ### Dashboard de métricas *(SUPERVISOR y ADMIN)*
 
@@ -75,6 +79,25 @@ El sistema se conecta a un proveedor externo de mensajería que:
 - Tabla de rendimiento por usuario: conversaciones abiertas, pendientes, resueltas y mensajes enviados en el período
 - Fila virtual "Sin asignar" para conversaciones sin agente
 - Panel lateral de drill-down: al clicar en un usuario se listan las conversaciones en las que ha interactuado; botón "Abrir →" navega al chat con scroll automático al mensaje más reciente
+- **Asistente IA** (botón "Asistente IA" en el header): chat en lenguaje natural para consultar datos del sistema
+
+### Asistente IA *(SUPERVISOR y ADMIN)*
+
+Panel de chat lateral que permite hacer preguntas en lenguaje natural sobre los datos del sistema. Ejemplos de lo que puede responder:
+
+- *¿Cuántas conversaciones hay abiertas ahora mismo?*
+- *¿Qué agente tiene más conversaciones esta semana?*
+- *¿Cuántos mensajes con sentimiento negativo hubo hoy?*
+- *¿Qué conversaciones tienen la etiqueta "Urgente"?*
+- *¿Cuántas conversaciones se cerraron el mes pasado?*
+
+El asistente mantiene contexto conversacional completo: las preguntas de seguimiento ("¿y cuántas tiene ese cliente?", "¿tiene más etiquetas?") reutilizan el contexto de la respuesta anterior.
+
+### Gestión de etiquetas *(solo ADMIN)*
+
+- Tabla de etiquetas con muestra de color, nombre y acciones de editar/eliminar
+- Crear y editar etiquetas con modal de formulario: nombre (máx. 40 caracteres) y paleta de 12 colores predefinidos con vista previa en tiempo real
+- Baja lógica: al eliminar una etiqueta se desvincula de todas las conversaciones automáticamente
 
 ### Gestión de usuarios *(solo ADMIN)*
 
@@ -191,7 +214,13 @@ MESSAGE_API_USERNAME=usuario_del_proveedor
 MESSAGE_API_PASSWORD=password_del_proveedor
 MESSAGE_API_FROM=+34600000000
 CORS_ORIGIN=http://localhost:5173
+
+# Asistente IA (RunPod)
+RUNPOD_API_KEY=tu_api_key_de_runpod
+RUNPOD_ENDPOINT_ID=id_del_endpoint
 ```
+
+> **Nota RunPod:** configura **Min Workers = 1** en el panel del endpoint para evitar cold starts de 30-40 segundos. Se recomienda el modelo `qwen2.5-coder:14b` (cabe en una RTX A4500 con VRAM suficiente) o `qwen2.5-coder:32b` si dispones de más VRAM.
 
 ## Frontend — `frontend/.env`
 
@@ -290,11 +319,20 @@ ProyectoDAW/
 │   │   └── migrations/
 │   ├── src/
 │   │   ├── controllers/
-│   │   │   └── stats.controller.js
+│   │   │   ├── assistant.controller.js
+│   │   │   ├── conversations.controller.js
+│   │   │   ├── labels.controller.js
+│   │   │   ├── stats.controller.js
+│   │   │   └── webhooks.controller.js
 │   │   ├── routes/
+│   │   │   ├── assistant.routes.js
+│   │   │   ├── conversations.routes.js
+│   │   │   ├── labels.routes.js
 │   │   │   └── stats.routes.js
 │   │   ├── middleware/
 │   │   ├── services/
+│   │   │   ├── assistant.service.js
+│   │   │   └── sentiment.service.js
 │   │   ├── prisma/
 │   │   │   └── client.js
 │   │   ├── socket.js
@@ -320,8 +358,11 @@ ProyectoDAW/
 │   │   │   │   └── MessageInput.vue
 │   │   │   ├── dashboard/
 │   │   │   │   ├── AgentTable.vue
+│   │   │   │   ├── AssistantPanel.vue
 │   │   │   │   ├── KpiCard.vue
 │   │   │   │   └── UserConversationsModal.vue
+│   │   │   ├── labels/
+│   │   │   │   └── LabelFormModal.vue
 │   │   │   └── users/
 │   │   │       ├── UserTable.vue
 │   │   │       └── UserFormModal.vue
@@ -332,12 +373,14 @@ ProyectoDAW/
 │   │   ├── stores/
 │   │   │   ├── auth.js
 │   │   │   ├── conversations.js
+│   │   │   ├── labels.js
 │   │   │   ├── stats.js
 │   │   │   └── theme.js
 │   │   ├── views/
 │   │   │   ├── LoginView.vue
 │   │   │   ├── MainView.vue
 │   │   │   ├── DashboardView.vue
+│   │   │   ├── LabelsView.vue
 │   │   │   ├── UsersView.vue
 │   │   │   └── ProfileView.vue
 │   │   ├── App.vue
@@ -388,6 +431,21 @@ ProyectoDAW/
 | `GET` | `/conversations/:id/messages` | JWT |
 | `POST` | `/conversations/:id/messages` | JWT |
 
+## Etiquetas
+
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `GET` | `/labels` | JWT |
+| `POST` | `/labels` | JWT + ADMIN |
+| `PATCH` | `/labels/:id` | JWT + ADMIN |
+| `DELETE` | `/labels/:id` | JWT + ADMIN |
+| `POST` | `/conversations/:id/labels` | JWT |
+| `DELETE` | `/conversations/:id/labels/:labelId` | JWT |
+
+`POST /labels` body: `{ "name": "Urgente", "color": "#ef4444" }` — color debe ser un hex de 6 dígitos.  
+`POST /conversations/:id/labels` body: `{ "labelId": 3 }` — máximo 5 etiquetas por conversación.  
+`DELETE /labels/:id` realiza baja lógica y elimina en cascada todos los registros de `ConversationLabel`.
+
 ## Usuarios
 
 | Método | Ruta | Acceso |
@@ -403,6 +461,36 @@ ProyectoDAW/
 |--------|------|--------|
 | `GET` | `/stats` | JWT + SUPERVISOR / ADMIN |
 | `GET` | `/stats/users/:userId/conversations` | JWT + SUPERVISOR / ADMIN |
+| `GET` | `/stats/labels` | JWT + SUPERVISOR / ADMIN |
+
+`GET /stats/labels` acepta query param opcional `?status=OPEN|PENDING|CLOSED`. Devuelve `{ labelKpis: [{ id, name, color, count }], conversationsWithAnyLabel: N }`.
+
+## Asistente IA
+
+| Método | Ruta | Acceso |
+|--------|------|--------|
+| `POST` | `/assistant` | JWT + SUPERVISOR / ADMIN (rate limit 20 req/min) |
+
+**Body:**
+```json
+{
+  "message": "¿Cuántas conversaciones hay abiertas?",
+  "history": [
+    { "role": "user", "content": "...", "sql": null },
+    { "role": "assistant", "content": "...", "sql": "SELECT ..." }
+  ]
+}
+```
+
+**Respuesta:**
+```json
+{
+  "ok": true,
+  "answer": "Hay 12 conversaciones abiertas en este momento.",
+  "sql": "SELECT COUNT(*) AS total FROM Conversation c WHERE c.status = 'OPEN'",
+  "ms": 2341
+}
+```
 
 ## Webhook
 
@@ -465,9 +553,37 @@ El cliente puede unirse a una room de conversación emitiendo `conversation:join
 | `id` | Int | PK |
 | `direction` | Enum | `IN` / `OUT` |
 | `state` | Enum | `PENDING` / `SENT` / `RECEIVED` / `READ` / `ERROR` / `DELETED` |
-| `text` | String | |
+| `text` | String? | Null en mensajes multimedia |
+| `sentiment` | String? | `positive` / `neutral` / `negative` / `angry` — solo mensajes `IN` |
+| `occurredAt` | DateTime | Fecha real del mensaje |
 | `conversationId` | Int | FK → Conversation |
 | `sentById` | Int? | FK → User |
+
+El campo `sentiment` se calcula automáticamente al recibir cada mensaje entrante mediante el analizador propio `sentiment.service.js` (ver sección 15).
+
+## Label
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | Int | PK |
+| `name` | String | Único |
+| `color` | String | Hex (#rrggbb) |
+| `active` | Boolean | Baja lógica |
+| `createdAt` | DateTime | |
+| `updatedAt` | DateTime | |
+
+## ConversationLabel
+
+Tabla puente N:M entre `Conversation` y `Label`.
+
+| Campo | Tipo | Notas |
+|-------|------|-------|
+| `id` | Int | PK |
+| `conversationId` | Int | FK → Conversation (cascade delete) |
+| `labelId` | Int | FK → Label (cascade delete) |
+| `createdAt` | DateTime | |
+
+Restricción única: `[conversationId, labelId]` (no se puede asignar la misma etiqueta dos veces a la misma conversación). Máximo **5 etiquetas por conversación** validado en el backend.
 
 ## ConversationUserState
 
@@ -539,8 +655,9 @@ https://webhook.tudominio.com/webhooks/provider
 | `socket.io` | Comunicación en tiempo real |
 | `cors` | Permite peticiones desde el frontend |
 | `dotenv` | Variables de entorno |
-| `express-rate-limit` | Limita intentos de login |
+| `express-rate-limit` | Limita intentos de login y peticiones al asistente IA |
 | `multer` | Subida de archivos (avatares) |
+| `sentiment.service.js` *(propio)* | Análisis de sentimiento en español con diccionario de palabras y frases |
 | `nodemon` *(dev)* | Reinicio automático en desarrollo |
 | `prisma` *(dev)* | CLI para schema, migraciones y seed |
 
@@ -562,7 +679,101 @@ https://webhook.tudominio.com/webhooks/provider
 
 ------------------------------------------------------------------------
 
-# 15. Flujo de mensajes
+# 15. Asistente IA — arquitectura
+
+## Funcionamiento
+
+El usuario escribe una pregunta en español en el panel de chat lateral. El backend ejecuta dos llamadas secuenciales al modelo de lenguaje alojado en RunPod:
+
+```
+Pregunta → RunPod (SQL) → MySQL → RunPod (resumen) → Respuesta
+```
+
+1. **Primera llamada (Text-to-SQL):** envía la pregunta junto con el historial completo de la conversación y el esquema de la BD. El modelo devuelve una query MySQL SELECT.
+2. **Validación y sanitización:** se elimina markdown, comentarios SQL y texto extra; se verifica que sea un SELECT; se corrigen alias con guión bajo; se bloquean palabras clave peligrosas.
+3. **Ejecución:** `prisma.$queryRawUnsafe()`. Si falla por `ONLY_FULL_GROUP_BY` (error 1055), se reintenta envolviendo columnas no agregadas en `ANY_VALUE()`.
+4. **Segunda llamada (resumen):** si hay resultados, el modelo los convierte a lenguaje natural.
+5. **Contexto conversacional:** el SQL generado y la respuesta en lenguaje natural de cada turno se incluyen en el historial del turno siguiente, permitiendo preguntas de seguimiento naturales.
+
+## Análisis de sentimiento
+
+Cada mensaje entrante (`direction = IN`) recibe automáticamente una etiqueta de sentimiento calculada por el servicio propio `backend/src/services/sentiment.service.js`, sin dependencias externas.
+
+### Cómo funciona
+
+1. **Normalización:** el texto se convierte a minúsculas, se eliminan tildes (NFD) y la puntuación se reemplaza por espacios.
+2. **Detección de frases (multi-palabra):** se comprueban ~60 expresiones ordenadas de mayor a menor longitud para capturar el match más específico primero (ej. `"llevo días esperando"`, `"madre mía"`, `"muchas gracias"`).
+3. **Detección de palabras individuales:** los tokens resultantes se comparan contra un diccionario de ~100 palabras en español (ej. `furioso`, `enfadado`, `excelente`, `gracias`).
+4. **Puntuación acumulada:** cada coincidencia suma su score (−5 a +5) al total.
+5. **Etiqueta final:**
+
+| Score acumulado | Etiqueta |
+|-----------------|----------|
+| ≤ −5 | `angry` |
+| −4 a −2 | `negative` |
+| −1 a +1 | `neutral` |
+| ≥ +2 | `positive` |
+
+### Ejemplos de cobertura
+
+| Expresión | Score | Etiqueta |
+|-----------|-------|----------|
+| "llevo días esperando" | −5 | `angry` |
+| "estoy muy cabreado" | −4 | `angry` |
+| "madre mía, qué lentos" | −6 | `angry` |
+| "estoy enfadado" | −3 | `negative` |
+| "muchas gracias, muy amable" | +8 | `positive` |
+| "ok" | +1 | `neutral` |
+
+El campo `Message.sentiment` queda disponible para consultas del asistente ("¿cuántos mensajes negativos hubo hoy?").
+
+## Configuración del endpoint RunPod
+
+El endpoint debe servir Ollama con el modelo `qwen2.5-coder:14b` (recomendado) o `qwen2.5-coder:32b`.
+
+Variables de entorno del worker de RunPod:
+
+```
+OLLAMA_MODEL_NAME=qwen2.5-coder:14b
+MAX_CONCURRENCY=8
+```
+
+Configuración recomendada del endpoint:
+
+- **Min Workers:** 1 (evita cold starts de 30-40 s)
+- **Idle timeout:** 5 min
+- **Execution timeout:** 600 s
+
+## Archivos principales por funcionalidad
+
+### Etiquetas
+
+| Archivo | Descripción |
+|---------|-------------|
+| `backend/src/controllers/labels.controller.js` | CRUD de etiquetas: listar, crear, editar, baja lógica |
+| `backend/src/routes/labels.routes.js` | Rutas `GET/POST/PATCH/DELETE /labels` |
+| `frontend/src/stores/labels.js` | Pinia store: fetch, create, update, delete con orden por nombre |
+| `frontend/src/views/LabelsView.vue` | Vista de gestión de etiquetas (tabla + modal) |
+| `frontend/src/components/labels/LabelFormModal.vue` | Modal crear/editar: nombre, paleta de 12 colores, vista previa |
+
+### Asistente IA
+
+| Archivo | Descripción |
+|---------|-------------|
+| `backend/src/services/assistant.service.js` | Lógica principal: Text-to-SQL, validación, ejecución, resumen, contexto dinámico |
+| `backend/src/controllers/assistant.controller.js` | Controlador REST, validación de entrada, manejo de errores |
+| `backend/src/routes/assistant.routes.js` | Ruta `POST /assistant` con rate limit y RBAC |
+| `frontend/src/components/dashboard/AssistantPanel.vue` | Panel de chat lateral con overlay, chips de sugerencias e indicador de cold start |
+
+### Análisis de sentimiento
+
+| Archivo | Descripción |
+|---------|-------------|
+| `backend/src/services/sentiment.service.js` | Analizador propio: diccionario de ~60 frases y ~100 palabras en español, sin dependencias externas |
+
+------------------------------------------------------------------------
+
+# 16. Flujo de mensajes
 
 **Mensaje entrante:**
 ```
@@ -576,7 +787,7 @@ Frontend → API → Proveedor → Webhook → BD → Socket.IO → Frontend
 
 ------------------------------------------------------------------------
 
-# 16. Comandos de referencia rápida
+# 17. Comandos de referencia rápida
 
 ```bash
 # Arrancar backend (desde backend/)
