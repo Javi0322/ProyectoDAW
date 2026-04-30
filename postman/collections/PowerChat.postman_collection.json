@@ -361,6 +361,76 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Conversation:AddLabel",
+          "id": "conv-label-add-0000-0000-000000000001",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"labelId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/labels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "labels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Conversation:RemoveLabel",
+          "id": "conv-label-del-0000-0000-000000000002",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/conversations/{{conversationId}}/labels/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "conversations",
+                "{{conversationId}}",
+                "labels",
+                "{{labelId}}"
+              ]
+            }
+          },
+          "response": []
         }
       ],
       "id": "b79626db-0f5f-49ad-b948-25e86201a8b7"
@@ -623,6 +693,144 @@
       ]
     },
     {
+      "name": "Labels",
+      "id": "labels00-0000-0000-0000-000000000001",
+      "item": [
+        {
+          "name": "Labels:List",
+          "id": "labels00-0000-0000-0000-000000000002",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/labels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "labels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Labels:Create",
+          "id": "labels00-0000-0000-0000-000000000003",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Urgente\",\r\n    \"color\": \"#f59e0b\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/labels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "labels"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Labels:Update",
+          "id": "labels00-0000-0000-0000-000000000004",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Urgente v2\",\r\n    \"color\": \"#ef4444\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/labels/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "labels",
+                "{{labelId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Labels:Delete",
+          "id": "labels00-0000-0000-0000-000000000005",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/labels/{{labelId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "labels",
+                "{{labelId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Stats",
       "id": "st4ts000-0000-0000-0000-000000000001",
       "item": [
@@ -704,6 +912,86 @@
                   "value": "2026-03-30",
                   "description": "Fin del período (YYYY-MM-DD)"
                 }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Stats:Labels",
+          "id": "st4ts000-0000-0000-0000-000000000004",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats/labels",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats",
+                "labels"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "OPEN",
+                  "description": "Filtra por estado de conversación: OPEN, PENDING o CLOSED (opcional)",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Assistant",
+      "id": "assist00-0000-0000-0000-000000000001",
+      "item": [
+        {
+          "name": "Assistant:PostMessage",
+          "id": "assist00-0000-0000-0000-000000000002",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"message\": \"¿Cuántas conversaciones abiertas hay?\",\r\n    \"history\": []\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/assistant",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "assistant"
               ]
             }
           },
